@@ -1,0 +1,13 @@
+Package: netGO
+Title: Gene-Set Analysis and Visualize with Network information
+Version: 0.0.0.0
+Authors@R: person("Jinhwan", "Kim", email = "kjh0530@unist.ac.kr", role = c("aut", "cre"))
+Description: netGO.
+Depends: R (>= 3.5.2),
+Imports:
+  foreach,
+  doParallel,
+  parallel
+License: MIT + File license
+Encoding: UTF-8
+LazyData: true
