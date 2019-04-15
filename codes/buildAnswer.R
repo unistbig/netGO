@@ -16,6 +16,9 @@ genes = g[1:50]
 mycANS = names(C2GS)[union(grep("_MYC", names(C2GS)), grep("MYC_", names(C2GS)))]
 mycANS = mycANS[-4]
 mycANS = mycANS[-c(6:11)]
+
+# MYCOSIS, MYCOBACTERIUM removed
+
 ans = mycANS
 
 teloANS = union(names(C2GS)[grep("_TEL", names(C2GS))], names(C2GS)[grep("_TERT", names(C2GS))])
@@ -23,7 +26,7 @@ teloANS = union(names(C2GS)[grep("_TEL", names(C2GS))], names(C2GS)[grep("_TERT"
 # http://science.sciencemag.org/content/284/5419/1431.2
 # p53, FAS, Apoptosis
 p53ANS = unique(c(names(C2GS)[grep("P53", names(C2GS))], names(C2GS)[grep("FAS", names(C2GS))], names(C2GS)[grep("APOPT", names(C2GS))]))
-p53ANS = names(C2GS)[grep("P53", names(C2GS))] # p53 only                
+p53ANS = names(C2GS)[grep("P53", names(C2GS))] # p53 only
 
 # GSE120559 MYC , MYC GENESETS;
 genes = g[1:5] # 10/1

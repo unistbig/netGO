@@ -36,7 +36,7 @@ ReadBinoxRes = function(filename){
   filename = paste0('2',filename)
   write(paste(strsplit(tab[1],'\t')[[1]][3:7],collapse = '\t'),file=filename)
 
-  for(i in 1:(length(tab)-1)/3){
+  for(i in seq(from = 1, to = (length(tab)-1)/3, by = 1 )){
     write( paste( strsplit(tab[i*3],'\t')[[1]][2], tab[i*3+1], collapse = ''), file=filename,append = T)
   }
   tab = read.table(filename, header = TRUE,stringsAsFactors = FALSE)
@@ -50,9 +50,9 @@ ReadBinoxRes = function(filename){
   return(pv)
 }
 
-#' @export 
+#' @export
 
-# transpose c2gs to binox form. 
+# transpose c2gs to binox form.
 filename = 'BinoxPathwaySymbol_15_500.tsv'
 for(i in 1:length(C2GS)){
   thisgs = C2GS[[i]]
@@ -64,4 +64,14 @@ for(i in 1:length(C2GS)){
 filename = 'brca20genes.tsv'
 
 write(paste(genes, 'BRCA', sep = '\t'), file= filename)
-r
+bBRCA= ReadBinoxRes('BinoxBRCARes.txt')
+bBRCAH= ReadBinoxRes('BinoxBRCAResH.txt')
+
+bMYC= ReadBinoxRes('BinoxMYCRes.txt')
+bMYCH= ReadBinoxRes('BinoxMYCResH.txt')
+
+bP53= ReadBinoxRes('BinoxP53Res.txt')
+bP53H= ReadBinoxRes('BinoxP53ResH.txt')
+
+bBRCA[1:5]
+nBR
