@@ -100,9 +100,8 @@ pMM = function(genes, genesI,  genesets, genesetsI, genesetV){
     else{
       v2 = genesetV[U, i]
       #v = sum(genesetV[U, i]) / length(U) / length(B)
-      v2[which(v2>3)] = 3
+      v2[which(v2>1.5)] = 1.5
       v = sum(v2)
-      #if(v>5){v = 5} # if overtruncate sum : 400, not quite differ
       v = v / length(U) / length(B)
       return(v)
     }
