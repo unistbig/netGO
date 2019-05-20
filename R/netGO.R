@@ -138,6 +138,13 @@ getPvalue = function(genes, genesets, PPI, genesetV){
 BuildGenesetV = function(PPI, genesets){
   GenesetV = matrix(0,nrow(PPI), length(genesets))
   GetV = function(geneA, geneB){return(sum(PPI[geneA,geneB]))}
+  # added genesets indexing ; too slow as symbol
+  for(i in 1:length(genesets)){
+    v = intersect(rownames(PPI), genesets[[i]])
+    v = sapply(1:length(v), function(j){which(rownames(PPI)==v[[j]])})
+    genesets[[i]]=v
+  }
+
   for(i in 1:nrow(PPI)){
     SubGeneset = rep(0,length(genesets))
     ThisGene = i
@@ -159,4 +166,35 @@ netGO = function(genes, genesets, PPI, genesetV){
   pvh = getHyperPvalue(genes, genesets)
   pv = getPvalue(genes, genesets, PPI, genesetV)
   return(list(pv = pv, pvh = pvh))
+}
+
+#' @export
+netGOVis = function(obj, brca, genesets, PPI, R = 20, Q = NULL){
+  # arg1 -> inst/FOLDERNAME ( GScluster )
+  # arg2 -> ...?
+
+  # code to run netGOVis
+  appDir = system.file("netGO", package = 'netGO')
+  if(appDir ==''){
+    stop(
+      "Could not find shinyCyJS Directory, Try re-installing 'shinyCyJS'.",
+      call. = FALSE
+    )
+  }
+
+  .GlobalEnv$.obj = obj
+  .GlobalEnv$.brca = brca
+  .GlobalEnv$.PPI = PPI
+  .GlobalEnv$.genesets = genesets
+  .GlobalEnv$.Q = Q
+  .GlobalEnv$.R = R
+
+  on.exit(rm(list=c('.obj', '.brca', '.PPI','.genesets','.R','.Q'),
+             envir=.GlobalEnv))
+
+  shiny::runApp(
+    appDir,
+    launch.browser = TRUE,
+    display.mode ='normal'
+  )
 }
