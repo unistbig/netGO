@@ -91,23 +91,23 @@ BuildGenesetsI = function(rn, genesets){
 
 #' @export
 pMM = function(genes, genesI,  genesets, genesetsI, genesetV){
-  ovl = sapply(1:length(genesets), function(i){length(intersect(genesets[[i]], genes))/length(genes)})
-  alpha = 1
+  ovl = sapply(1:length(genesets), function(i){length(intersect(genesets[[i]], genes))/length(genes) })
+  w = 1
+  # k = .25
+  k = .3
   net = sapply(1:length(genesets), function(i){
     B = genesetsI[[i]]
     U = setdiff(genesI, B)
     if(length(U)==0){ v = 0 }
     else{
-      v2 = genesetV[U, i]
-      #v = sum(genesetV[U, i]) / length(U) / length(B)
-      v2[which(v2>1.5)] = 1.5
-      v = sum(v2)
-      v = v / length(U) / length(B)
+      v = sum(genesetV[U, i])/length(genesets[[i]])
+      v = min(v,k)
+      v = v / length(U)
       return(v)
     }
     v
   })
-  return(1-(ovl+net*alpha))
+  return(1-(ovl+w*net))
 }
 #' @export
 getPvalue = function(genes, genesets, PPI, genesetV){
