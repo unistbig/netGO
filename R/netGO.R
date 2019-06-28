@@ -93,17 +93,16 @@ BuildGenesetsI = function(rn, genesets){
 pMM = function(genes, genesI,  genesets, genesetsI, genesetV){
   ovl = sapply(1:length(genesets), function(i){length(intersect(genesets[[i]], genes))/length(genes) })
   w = 1
-  k = .015 #* MAIN USE
+  k = .3 #* MAIN USE
   net = sapply(1:length(genesets), function(i){
     B = genesetsI[[i]]
     U = setdiff(genesI, B)
     if(length(U)==0){ v = 0 }
     else{
       v = genesetV[U,i]/length(B)
-      #v[which(v>k)] = k, test not truncation
+      v[which(v>k)] = k
       v = sum(v)
-      #v = sum(genesetV[U, i])/length(B)
-      #v = min(v,k)
+      v = min(v,k)
       v = v / length(U)
       return(v)
     }
