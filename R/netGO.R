@@ -20,7 +20,7 @@ getHyperPvalue = function(genes, genesets){
 }
 
 #' @export
-IndexGenes = function(genes, rn){ unlist(sapply(genes, function(i){ which(i==rn) }, USE.NAMES = F)) }
+IndexGenes = function(genes, rn){ sort(unlist(sapply(genes, function(i){ which(i==rn) }, USE.NAMES = F))) }
 
 #' @export
 GetSamplePPILV = function(genes, PPILV){ table(PPILV[genes]) }
@@ -45,21 +45,14 @@ Resample = function(SamplePPILV, PPILV){
 
 #' @export
 getPPI = function(PPI){
+
   PPISum = sapply(1:nrow(PPI),function(i){sum(PPI[i,],na.rm = T)})
 
   rn = rownames(PPI)
 
   names(PPISum) = rn
   res = rep(0,length(rn))
-  # 4 Group
-  #v = summary(PPISum)
-  #for(i in 1:length(rn)){
-   #if(is.na(PPISum[rn[i]])){res[i] = 0}
-    #else if(PPISum[rn[i]]<=v[2]){res[i] = 1} # 1Q
-    #else if(PPISum[rn[i]]<=v[3]){res[i] = 2} # 2Q
-    #else if(PPISum[rn[i]]<=v[5]){res[i] = 3} # 3Q
-    #else {res[i] = 4}
-  #}
+
   # 10 Group
   v = unname(quantile(PPISum, probs = seq(0,1,1/9)))
   for(i in 1:length(rn)){
@@ -82,54 +75,86 @@ getPPI = function(PPI){
 }
 
 #' @export
-BuildGenesetsI = function(rn, genesets){
-  genesetsI = list()
-  for(i in 1:length(genesets)){ genesetsI[[i]] = unlist(sapply(genesets[[i]], function(k){which(k == rn)}), use.names = FALSE)}
-  names(genesetsI) = names(genesets)
-  genesetsI
+BuildGenesetsI = function(rn, genesets){ lapply(genesets, IndexGenes, rn = rn) }
+
+DIF = function(A,B){
+  V = setdiff(A,B);
+  if(L(V)==0){return(0)}
+  return(V)
 }
+INT = function(A,B){intersect(A,B)}
+L = function(A){length(A)}
+UNI = function(A,B){union(A,B)}
 
 #' @export
-pMM = function(genes, genesI,  genesets, genesetsI, genesetV){
-  ovl = sapply(1:length(genesets), function(i){length(intersect(genesets[[i]], genes))}) / length(genes)
-  alpha = 1
-  # truncation discarded
-  trunV = .5
+pMM = function(genes, genesI, genesets, genesetsI, LGS, PPI ){
+  ALPHA = 1
+  P = function(A,B){ sum(PPI[A,B]) }
 
-  net = sapply(1:length(genesets), function(i){
-    U = setdiff(genesI, genesetsI[[i]])
-    if(length(U)==0){ v = 0 }
-    else{
-      v = genesetV[U,i]/length(genesets[[i]])
-      #v[which(v>trunV)] = trunV
-      v = sum(v) / length(genes)
-      return(v)
-    }
+  OVL = sapply(1:L(genesets), function(i){L(INT(genesets[[i]], genes))}) / L(genes)
+
+  NET = sapply(1:L(genesets), function(i){
+    g = L(genes)
+    A = genesI
+    B = genesetsI[[i]]
+    D = DIF(A,B)
+
+    w = LGS[i] / ( g + LGS[i] - g * OVL[i] )
+    v = ( P(D, B) + (w-1) * P(D, INT(A,B)) ) / ( LGS[i] + (1-w) * g * OVL[i] )
+
     v
   })
-  return(1-(ovl+alpha*net))
-}
-#' @export
-getPvalue = function(genes, genesets, PPI, genesetV){
-  require(foreach)
-  genesI = IndexGenes(genes,rownames(PPI))
-  genesetsI = BuildGenesetsI(rownames(PPI), genesets)
-  PPILV = getPPI(PPI)
 
-  od = pMM(genes, genesI, genesets, genesetsI, genesetV)
-  SamplePPILV = GetSamplePPILV(genes, PPILV)
+  return(1-(OVL+ALPHA*NET))
+}
+
+#' @export
+pMM2 = function(genes, genesets, genesI, genesetV, RS){
+  OVL = sapply(1:L(genesets), function(i){L(INT(genes, genesets[[i]]))})
+  NET = sapply(1:L(genesets), function(i){ sqrt( (sum(genesetV[genesI,i])^2) / (sum(RS[genesI]) * length(genesets[[i]]) ) ) })
+  1-(OVL+NET)/L(genes)
+}
+
+#' @export
+getPvalue = function(genes, genesets, PPI, genesetV, REP = 10000){
+
+  LGS = sapply(1:L(genesets), function(i){length(genesets[[i]])})
+
+  RS = sapply(1:nrow(PPI), function(i){sum(PPI[,i])})
+  names(RS) = rownames(PPI)
   sim = function(){
     sampled = Resample(SamplePPILV, PPILV)
     sampledI = IndexGenes(sampled,rownames(PPI))
-    as.numeric(pMM(sampled, sampledI, genesets, genesetsI, genesetV) <= od)
+    as.numeric(pMM(sampled, sampledI, genesets, genesetsI, LGS, PPI) <= od)
   }
+
+  sim2 = function(){
+    sampled = Resample(SamplePPILV, PPILV)
+    sampledI = IndexGenes(sampled,rn)
+    as.numeric(pMM2(sampled, genesets, sampledI, genesetV, RS) <= od)
+  }
+  genesI = IndexGenes(genes,rownames(PPI)) # 0
+
+  #genesetsI = BuildGenesetsI(rownames(PPI), genesets) # 30 second
+
+  PPILV = getPPI(PPI) # 13 second
+
+  # od = pMM(genes, genesI, genesets, genesetsI, LGS, PPI) # 0.1 second
+  od = pMM2(genes, genesets, genesI, genesetV, RS)
+
+  SamplePPILV = GetSamplePPILV(genes, PPILV) # 0 second
 
   numCores = parallel::detectCores()
   cl = parallel::makeCluster(numCores-1)
   on.exit(parallel::stopCluster(cl))
   doParallel::registerDoParallel(cl)
-  pv = foreach(i=1:10000,.combine = '+',.inorder = FALSE) %dopar% { sim() }
-  pv = (pv+1)/10001
+  rn = rownames(PPI)
+  # ~ 1 second
+  #pv = foreach( i=1:REP, .inorder = FALSE, .combine = '+', .verbose = TRUE ) %dopar% { sim() }
+  pv = foreach(i = 1:REP, .inorder = FALSE, .combine = '+', .noexport = 'PPI', .verbose = TRUE) %dopar% {sim2()}
+  #pv = Reduce(`+`,pv)
+
+  pv = (pv+1)/(REP+1)
   names(pv) = names(genesets)
   return(pv)
 }
@@ -163,6 +188,11 @@ BuildGenesetV = function(PPI, genesets){
 
 #' @export
 netGO = function(genes, genesets, PPI, genesetV){
+
+  require(foreach)
+  require(parallel)
+  require(doParallel)
+
   pvh = getHyperPvalue(genes, genesets)
   pv = getPvalue(genes, genesets, PPI, genesetV)
   return(list(pv = pv, pvh = pvh))
