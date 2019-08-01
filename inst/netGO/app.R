@@ -5,7 +5,7 @@
 
 # Data prepare
 
-# brca = c('COL17A1','KCNJ16','FXYD1','OXTR','SCARA5','SAMD5','MYH11','SLC7A3','COL6A6',
+# genes = c('COL17A1','KCNJ16','FXYD1','OXTR','SCARA5','SAMD5','MYH11','SLC7A3','COL6A6',
          #'CD300LG','SDPR','MAMDC2','CAPN11','HAS3','KCNE1','ZBTB16','TSHZ2','AK5','SEMA5A','PGM5')
 
 # load("c2gs.RData")
@@ -21,7 +21,7 @@ library(DT)
 suppressPackageStartupMessages(library(googleVis))
 
 obj = .GlobalEnv$.obj
-brca = .GlobalEnv$.brca
+genes = .GlobalEnv$.genes
 PPI = .GlobalEnv$.PPI
 genesets = .GlobalEnv$.genesets
 Q = .GlobalEnv$.Q
@@ -32,9 +32,9 @@ if(!is.null(.obj)){ obj = .obj } else{
   load("obj.Rdata")
 }
 
-if(!is.null(.brca)){ brca = .brca } else{
-  print("brca not given, read Demo file")
-  load("brca.Rdata")
+if(!is.null(.genes)){ genes = .genes } else{
+  print("genes not given, read Demo file")
+  load("genes.Rdata")
 }
 
 if(!is.null(.PPI)){ PPI = .PPI } else{
@@ -122,20 +122,34 @@ getIntersect = function(gene,geneset){
   list(elements = elements, nwe = unique(nwe))
 }
 
-fit = function(brca, sGs){
-  runjs(
-    paste0('setTimeout(function(){',nodetojs(brca),
-           ".layout({name:'random',boundingBox:{x1:0,x2:0.8*cy.width()/3,
-           y1:0,y2:cy.height()},fit:false}).run()},3200);
-           setTimeout(function(){",nodetojs(sGs),
-           ".layout({name:'random',boundingBox:{x1:2.2*cy.width()/3,x2:cy.width(),
-           y1:0,y2:cy.height()},fit:false}).run()},3300);
-           setTimeout(function(){",nodetojs(intersect(brca,sGs)),
-           ".layout({name:'random',boundingBox:{x1:1.2*cy.width()/3,x2:1.8*cy.width()/3,
-           y1:0.2*cy.height(),y2:0.8*cy.height()},fit:false}).run()},3400);"
-           )) # set butterfly layout
+fit = function(genes, sGs){
 
-  runjs(
+  if(length(intersect(genes,sGs))){
+    runjs(
+      paste0('setTimeout(function(){',nodetojs(genes),
+             ".layout({name:'random',boundingBox:{x1:0,x2:0.8*cy.width()/3,
+             y1:0,y2:cy.height()},fit:false}).run()},3200);
+             setTimeout(function(){",nodetojs(sGs),
+             ".layout({name:'random',boundingBox:{x1:2.2*cy.width()/3,x2:cy.width(),
+             y1:0,y2:cy.height()},fit:false}).run()},3300);
+             setTimeout(function(){",nodetojs(intersect(genes,sGs)),
+             ".layout({name:'random',boundingBox:{x1:1.2*cy.width()/3,x2:1.8*cy.width()/3,
+             y1:0.2*cy.height(),y2:0.8*cy.height()},fit:false}).run()},3400);"
+             )) # set butterfly layout
+  }
+  else{
+    runjs(
+      paste0('setTimeout(function(){',nodetojs(genes),
+             ".layout({name:'random',boundingBox:{x1:0,x2:0.8*cy.width()/3,
+             y1:0,y2:cy.height()},fit:false}).run()},3200);
+             setTimeout(function(){",nodetojs(sGs),
+             ".layout({name:'random',boundingBox:{x1:2.2*cy.width()/3,x2:cy.width(),
+             y1:0,y2:cy.height()},fit:false}).run()},3300);"
+
+      )) # set butterfly layout
+  }
+
+  runjs( # aftercall
     "setTimeout(function(){
     cy.nodes().style('text-valign','center');
     cy.fit();
@@ -143,10 +157,11 @@ fit = function(brca, sGs){
     cy.edges().style('opacity',0.3);
            },3500)"
   ) # show graphs
-           }
+}
 afterCall = function(){
   runjs("setTimeout(function(){cy.on('click','node',function(e){clicknode(e.target)})},3500)")
   runjs("setTimeout(function(){cy.on('click',function(e){if(e.target===cy){unclick()}})},3500)")
+  runjs('setTimeout(function(){cy.panzoom()},3500)')
 }
 
 ui = function(){
@@ -155,14 +170,19 @@ ui = function(){
     tags$head(tags$style(type="text/css","html,body{width:100%;height:100%;overflow:hidden}")),
     tags$head(tags$style('.row,.col-sm-6,.container-fluid{height:100%}')),
     tags$head(tags$style('.well,#cy{height:95%;margin:1em}')),
+    tags$head(tags$script(src="cytoscape-panzoom.js")),
+    tags$link(rel = "stylesheet", type = "text/css", href = "cytoscape.js-panzoom.css"),
     tags$head(tags$script(src="additional_script.js")),
-    tags$head(tags$style('#view{height:50%;margin:1em};')),
+    tags$head(tags$style('#view{height:50%;margin:1em;margin-top:4em};')),
+
+    #tags$head(tags$script(src="cytoscape-svg-convertor.js")),
     sidebarLayout(
       position = 'right',
       sidebarPanel(
         DTOutput(outputId='table1'),
+        actionButton(inputId='btn2',label='Plot Gene-set network',style='position:absolute;right:18em;margin-bottom:1em;'),
+        downloadButton(outputId = "btn3", label = "Download Table",style='position:absolute;right:6em;margin-bottom:1em;'),
         htmlOutput("view"),
-        actionButton(inputId='btn2',label='Select',style='position:absolute;top:2em;'),
         width = 6
       ),
       mainPanel(
@@ -177,11 +197,11 @@ ui = function(){
   )
 }
 
-buildelement = function(brca, sGs){
+buildelement = function(genes, sGs){
   elements = list()
-  elements = append(elements, buildIG(setdiff(brca,sGs) ), after = length(elements))
-  elements = append(elements, buildIG(intersect(sGs, brca), '#03CB5D'), after = length(elements))
-  isobj = getIntersect(brca,sGs)
+  elements = append(elements, buildIG(setdiff(genes,sGs) ), after = length(elements))
+  elements = append(elements, buildIG(intersect(sGs, genes), '#03CB5D'), after = length(elements))
+  isobj = getIntersect(genes,sGs)
   elements = append(elements, buildIG(isobj$nwe, '#FCCE00'), after = length(elements))
   elements = append(elements, isobj$elements, after = length(elements))
   elements
@@ -189,44 +209,57 @@ buildelement = function(brca, sGs){
 
 server = function(input,output,session){
   # build example network
-  sGs = genesets[[13]]
-  elements = buildelement(brca, sGs)
+  si = sigIdx(obj,R = R,Q = Q)
+
+  myTab = cbind(names(si),round(cbind(obj$pv,obj$pvh)[si,],4))
+  myTab = data.frame(myTab, stringsAsFactors = FALSE)
+
+  myTab[,2] = as.numeric(myTab[,2])
+  myTab[,3] = as.numeric(myTab[,3])
+  rownames(myTab) = myTab[,1]
+  colnames(myTab) = c("Gene-set name","netGO","Hyper")
+  myTab = myTab[order(myTab[,2]),]
+  sGs = genesets[[myTab[1,1]]]
+
+  elements = buildelement(genes, sGs)
   output$cy = renderShinyCyJS(shinyCyJS(elements))
 
   afterCall()
-  fit(brca, sGs)
+  fit(genes, sGs)
 
-  si = sigIdx(obj,R = .R,Q = .Q)
-  myTab = round(cbind(obj$pv,obj$pvh)[si,],4)
-  colnames(myTab) = c("netGO","Hyper")
   output$table1 = renderDT(datatable(
     myTab,
-    extensions = 'Scroller' ,
+    rownames = FALSE,
+    extensions = c('Scroller', 'Buttons') ,
     options = list(
+      autoWidth = TRUE,
+      processing = TRUE,
+      order = list(list(1,'asc')),
       deferRender = TRUE,
-      scrollY = "240px", # each row takes 40 px
+      scrollY = "30em", # each row takes 40 px
       scroller = TRUE,
-      dom = 'ltipr'),
+      dom = 'ltipr'
+    ),
     selection = 'single'
-  )
+    )
   )
 
   myData = list(
     name = names(si),
-    ovl = unname(sapply(si, function(i){length(intersect(brca,genesets[[i]]))/ length(genesets[[i]])})),
-    ppi = unname(sapply(si, function(i){sum(PPI[intersect(rownames(PPI),brca),intersect(rownames(PPI), genesets[[i]])])/ length(genesets[[i]]) })),
-    size = as.numeric(sapply(unname(si), function(i){length(genesets[[i]])})),
-    sig = buildCol(obj)[si]
+    overlap = unname(sapply(si, function(i){length(intersect(genes,genesets[[i]]))/ length(genesets[[i]])})),
+    network = unname(sapply(si, function(i){sum(PPI[intersect(rownames(PPI),genes),intersect(rownames(PPI), genesets[[i]])])/ length(genesets[[i]]) })),
+    pvalue_log10 = sapply(names(si), function(i){ as.numeric(-log10(as.numeric(myTab[i,2]) )) }),
+    significant = buildCol(obj, R = R, Q = Q)[si]
   )
 
   output$view = renderGvis({
     gvisBubbleChart(
-      myData,idvar = 'name',xvar = 'ovl',
-      yvar = 'ppi', colorvar = 'sig',sizevar ='size',
+      myData,idvar = 'name',xvar = 'overlap',
+      yvar = 'network', colorvar = 'significant',sizevar ='pvalue_log10',
       options = list(
         width = '100%', height = '100%',
         chartArea = "{left:'5%',top:'5%',width:'80%',height:'80%'}",
-        colors= "['#8e44ad','#e74c3c', '#2980b9']",
+        colors= "['#8e44ad','#e74c3c', '#2980b9', '#2ecc71']",
         hAxis = "{title : 'Overlap'}",
         vAxis = "{title : 'Interact'}",
         colorAxis = "{legend:{position:'none'}}",
@@ -239,10 +272,34 @@ server = function(input,output,session){
     runjs('cy.$().remove();')
     sIdx = input$table1_rows_selected
     sGs <<- genesets[[rownames(myTab)[sIdx]]]
-    elements = buildelement(brca, sGs)
+    elements = buildelement(genes, sGs)
+
     output$cy = renderShinyCyJS(shinyCyJS(elements))
-    fit(brca, sGs)
+    fit(genes, sGs)
   })
+
+  output$btn3 = downloadHandler(
+    filename = function(){paste0("netGO-", Sys.Date(), ".txt")},
+    content = function(file) {
+      set  = myTab[,1]
+      size = sapply(1:nrow(myTab), function(i){length( genesets[[ myTab[i,1] ]] ) })
+      pv1 = myTab[,2]
+      pv2 = myTab[,3]
+      g = sapply(1:nrow(myTab), function(i){genesets[[myTab[i,1]]] })
+      for(i in 1:length(g)){
+        for(j in 1:length(g[[i]])){
+          if(g[[i]][j] %in% genes){g[[i]][j] = paste0(g[[i]][j],'(*)')}
+        }
+      }
+      g = sapply(1:nrow(myTab), function(i){paste0(sort(g[[i]]), collapse = ',') })
+      text =c('Gene-set\tSize\tnetGO-Pvalue\tHyper-Pvalue\tGenes')
+      for(i in 1:(length(set))){
+        text[i+1] = paste(set[i], size[i], pv1[i],pv2[i],g[[i]], sep = '\t')
+      }
+      writeLines(text, file)
+    }
+  )
+
 
 }
 shinyApp(ui,server)

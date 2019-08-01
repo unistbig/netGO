@@ -202,10 +202,11 @@ netGO = function(genes, genesets, PPI, genesetV, alpha = 0.5){
 }
 
 #' @export
-netGOVis = function(obj, brca, genesets, PPI, R = 20, Q = NULL){
+netGOVis = function(obj, genes, genesets, PPI, R = 20, Q = NULL){
+  suppressPackageStartupMessages('')
   # arg1 -> inst/FOLDERNAME ( GScluster )
   # arg2 -> ...?
-
+  require(shinyCyJS)
   # code to run netGOVis
   appDir = system.file("netGO", package = 'netGO')
   if(appDir ==''){
@@ -216,13 +217,13 @@ netGOVis = function(obj, brca, genesets, PPI, R = 20, Q = NULL){
   }
 
   .GlobalEnv$.obj = obj
-  .GlobalEnv$.brca = brca
+  .GlobalEnv$.genes = genes
   .GlobalEnv$.PPI = PPI
   .GlobalEnv$.genesets = genesets
   .GlobalEnv$.Q = Q
   .GlobalEnv$.R = R
 
-  on.exit(rm(list=c('.obj', '.brca', '.PPI','.genesets','.R','.Q'),
+  on.exit(rm(list=c('.obj', '.genes', '.PPI','.genesets','.R','.Q'),
              envir=.GlobalEnv))
 
   shiny::runApp(
