@@ -65,21 +65,24 @@ buildIG = function(genes, color = 'sky'){
 
 nodetojs = function(genes){paste0("cy.nodes('", paste('#',genes,sep='',collapse = ','),"')")}
 
-sigIdx = function(obj, R = 20, Q = NULL){
+sigIdx = function(obj, R, Q){
   pv = obj$pv
   pvh = obj$pvh
   if(!is.null(Q)){
     idx = which(p.adjust(pv,'fdr') <= Q | p.adjust(pvh,'fdr') <= Q)
     return(idx)
   }
-  idx = which(rank(pv, ties.method = 'first') <= R | rank(pvh, ties.method = 'first') <= R)
+  else{
+    idx = which(rank(pv, ties.method = 'first') <= R | rank(pvh, ties.method = 'first') <= R)
+  }
+
   return(idx)
 }
 
-buildCol = function(obj,R = 20, Q= NULL){
+buildCol = function(obj, R, Q){
   if(!is.null(Q)){
-    A = unname(which(p.adjust(obj$pv,'fdr')<Q))
-    B = unname(which(p.adjust(obj$pvh,'fdr')<Q))
+    A = unname(which(p.adjust(obj$pv,'fdr')<=Q))
+    B = unname(which(p.adjust(obj$pvh,'fdr')<=Q))
   }
   else{
     A = unname(which(rank(obj$pv, ties.method = 'first')<=R))
@@ -167,13 +170,19 @@ afterCall = function(){
 ui = function(){
   fluidPage(
     useShinyjs(),
+    extendShinyjs(script = 'shinyjs.js'),
     tags$head(tags$style(type="text/css","html,body{width:100%;height:100%;overflow:hidden}")),
     tags$head(tags$style('.row,.col-sm-6,.container-fluid{height:100%}')),
     tags$head(tags$style('.well,#cy{height:95%;margin:1em}')),
     tags$head(tags$script(src="cytoscape-panzoom.js")),
+    tags$head(tags$script(src="cytoscape-cy-svg-convertor.js")),
+    tags$head(tags$script(src="cytoscape-svg-convertor.js")),
+    tags$head(tags$script(src="svg.min.js")),
     tags$link(rel = "stylesheet", type = "text/css", href = "cytoscape.js-panzoom.css"),
     tags$head(tags$script(src="additional_script.js")),
+
     tags$head(tags$style('#view{height:50%;margin:1em;margin-top:4em};')),
+    div(id='create', display='none'), # EMPTY DIV FOR DOWNLOAD SVG
 
     #tags$head(tags$script(src="cytoscape-svg-convertor.js")),
     sidebarLayout(
@@ -191,6 +200,11 @@ ui = function(){
         #style = 'position:absolute;top:1em;right:1em; z-index:9999;'
         #),
         ShinyCyJSOutput(outputId = 'cy', height = '95%'),
+        actionButton(
+          inputId = 'btn4',
+          label = 'Download Graph',
+          style='position:absolute; z-index:9999;right:1em;top:0.5em;'
+        ),
         width = 6
       )
     )
@@ -277,6 +291,9 @@ server = function(input,output,session){
     output$cy = renderShinyCyJS(shinyCyJS(elements))
     fit(genes, sGs)
   })
+
+  # download network svg form
+  observeEvent(input$btn4,{ js$download() })
 
   output$btn3 = downloadHandler(
     filename = function(){paste0("netGO-", Sys.Date(), ".txt")},

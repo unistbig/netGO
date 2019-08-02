@@ -1,0 +1,1 @@
+shinyjs.download = function(){download()}

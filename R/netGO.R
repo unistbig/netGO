@@ -202,7 +202,7 @@ netGO = function(genes, genesets, PPI, genesetV, alpha = 0.5){
 }
 
 #' @export
-netGOVis = function(obj, genes, genesets, PPI, R = 20, Q = NULL){
+netGOVis = function(obj, genes, genesets, PPI, R = 50, Q = NULL){
   suppressPackageStartupMessages('')
   # arg1 -> inst/FOLDERNAME ( GScluster )
   # arg2 -> ...?
