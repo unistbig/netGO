@@ -27,6 +27,7 @@ netGOVis(obj = obj, genes = brca[1:20], genesets = genesets, R = 50, network = P
 ```
 
 ### Functions
+<hr>
 #### 1. netGO
 This function returns a data frame of gene-set p-values derived from netGO and Fisher’s exact test.
 #### Input arguments
@@ -55,3 +56,4 @@ This function visualizes the result on the web browser (google chrome is recomme
 -	R (optional): Gene-set rank threshold, default is 50 (Top 50 gene-sets in either method will be shown).<br>
 -	Q (optional): Gene-set Q-value threshold, default is 1. (Gene-sets with Q-value <= 1 will be shown)<br>
 -	genes, genesets, network: same as in the ‘netGO’ function.<br>
+<hr>
