@@ -28,8 +28,8 @@ netGOVis(obj = obj, genes = brca[1:20], genesets = genesets, R = 50, network = P
 
 ### Functions
 #### netGO
-netGO function takes six input parameters: 1) genes, 2) genesets, 3) network, 4) genesetV, 5) alpha (optional) and 6) nperm. Then it returns a data frame of gene-set p-values derived from netGO and Fisher’s exact test. Notice that, member of genes (denoted by A, B, C here) should be gene symbols when using the default STRING and mSigDB data. Other types of gene names are also available if the corresponding customized data (network and gene-set data) are used. The description for each input arguments follows.
-<br>
+#### Input arguments
+
 -	genes: A character vector of input genes (e.g., DE genes). <br>
 -	genesets: A list of gene-sets consisting of groups of genes.<br>
 -	network: A numeric matrix of network data. The network score range is [0,1].<br>
@@ -42,8 +42,15 @@ genesetV = BuildGenesetV(network, genesets)
 -	alpha (optional): A numeric parameter reflecting the influence of the network data (e.g., PPI network). The value is between 0~1 and default is 0.5.<br>
 -	nperm: The number of permutations.<br>
 
+#### Output
+A data frame of gene-set p-values derived from netGO and Fisher’s exact test
+<br>
+Notice that, member of genes should be gene symbols when using the default STRING and mSigDB data. Other types of gene names are also available if the corresponding customized data (network and gene-set data) are used.
+
 #### netGOVis (for visualization)
-netGOVis takes as six input parameters: 1) obj, 2) genes, 3) genesets, 4) network, 5) R (optional), 6) Q (optional). This function visualizes the result on the web browser (google chrome is recommended). The result graphs and table are downloadable from the web browser.<br>
+This function visualizes the result on the web browser (google chrome is recommended). The result graphs and table are downloadable from the web browser.<br>
+
+#### Input arguments
 
 -	obj: A result data frame derived from ‘netGO’ function. It consists of three columns including 1) gene-set name and p-values evaluated from 2) netGO (netGOP) and 3) Fisher’s exact test (FisherP).<br>
 -	R (optional): Gene-set rank threshold, default is 50 (Top 50 gene-sets in either method will be shown).<br>
