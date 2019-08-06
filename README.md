@@ -38,8 +38,8 @@ Tip: <b>genesetVString.z01~.zip</b> are split zipped files. Uncompressing <b> â€
 
 ```r
 > library(devtools) 
-> install_github("unistbig/shinyCyJSâ€) 
-> install_github("unistbig/netGO")
+> install_github('unistbig/shinyCyJS') 
+> install_github('unistbig/netGO')
 > library(netGO) 
 > load('c2gs.RData') # contains genesets
 > load('brca.RData') # contains brca
