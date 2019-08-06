@@ -4,8 +4,7 @@ R/Shiny package for network-integrated pathway enrichment analysis
 ### Install and Launch
 #### * Prerequisites : Please install following R packages
 - devtool, Rcpp, shiny, shinyjs, DT, doParallel, foreach, parallel, htmlwidgets, googleVis, V8, shinyCyJS
-<br>
-- Tip: shinyCyJS</b> can be installed by  
+- Tip: <b>shinyCyJS</b> can be installed by  
 
 ```r
 install_github(‘unistbig/shinyCyJS’)
