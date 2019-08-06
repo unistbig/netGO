@@ -35,13 +35,14 @@ netGOVis(obj, genes, genesets, R, Q, PPI) # visualize the result
 Tip: <b>genesetVString.z01~.zip</b> are split zipped files. Uncompressing <b> ‘genesetVString.zip’</b> will create ‘genesetVString.RData’. 
 
 ```r
-> library(devtools) 
-> install_github('unistbig/shinyCyJS') 
-> install_github('unistbig/netGO')
-> library(netGO) 
-> load('c2gs.RData') # contains genesets
-> load('brca.RData') # contains brca
-> load('genesetVString.RData') # contains genesetV
-> load('PPIString.RData') # contains PPI
-> obj = netGO(genes = brca[1:10], genesets = genesets, PPI = PPI, genesetV = genesetV)
+library(devtools) 
+install_github('unistbig/shinyCyJS') 
+install_github('unistbig/netGO')
+library(netGO) 
+load('c2gs.RData') # contains genesets
+load('brca.RData') # contains brca
+load('genesetVString.RData') # contains genesetV
+load('PPIString.RData') # contains PPI
+obj = netGO(genes = brca[1:10], genesets = genesets, PPI = PPI, genesetV = genesetV)
+netGOVis(obj = obj, genes = brca[1:10], genesets = genesets, R = 30, Q = 0.25, PPI = PPI)
 ```
