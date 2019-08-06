@@ -43,7 +43,7 @@ genesetV = BuildGenesetV(network, genesets)
 -	alpha (optional): A numeric parameter reflecting the influence of the network data (e.g., PPI network). The value is between 0~1 and default is 0.5.<br>
 -	nperm: The number of permutations.<br>
 
-**Notice that, member of genes should be gene symbols when using the default STRING and mSigDB data. Other types of gene names are also available if the corresponding customized data (network and gene-set data) are used.
+**Notice** that, member of genes should be gene symbols when using the default STRING and mSigDB data. Other types of gene names are also available if the corresponding customized data (network and gene-set data) are used.
 
 #### 2. netGOVis (for visualization)
 This function visualizes the result on the web browser (google chrome is recommended). The result graphs and table are downloadable from the web browser.<br>
