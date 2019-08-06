@@ -1,48 +1,51 @@
 # netGO
 R/Shiny package for network-integrated pathway enrichment analysis
 
+### Introduction
+netGO is an R/Shiny package for network-integrated pathway enrichment analysis. It provides gene-set enrichment analysis results evaluated from netGO and simple Fisher’s exact test. It also provides visualization to let the users easily compare the results derived from two methods. The R/Shiny package is available at Github ( https://github.com/unistbig/netGO ). Currently, netGO provides network and gene-set data of four species including human, mouse, yeast and arabidopsis. Such accessory data are available at another repository (https://github.com/unistbig/netGO-Data/)
+
 ### Install and Launch
 #### * Prerequisites : Please install following R packages
 - devtool, Rcpp, shiny, shinyjs, DT, doParallel, foreach, parallel, htmlwidgets, googleVis, V8, shinyCyJS
-- Tip: <b>shinyCyJS</b> can be installed by  
 
 ```r
-install_github(‘unistbig/shinyCyJS’)
+install.packages(c('devtools', 'Rcpp', 'shinyjs', 'DT','doParallel', 'foreach', 'parallel', 'htmlwidgets', 'googleVis', 'V8'))
+library(devtools)
+install_github('unistbig/shinyCyJS')
 ```
 
-#### R codes to run netGO
+#### Example Run
 
 ```r
-library(devtools) # load devtools to use 'install_github' function
-install_github('unistbig/shinyCyJS') # install shinyCyJS
+library(devtools) # load devtools to use ‘install_github’ function
 install_github('unistbig/netGO') # install netGO
 library(netGO) # load netGO
-obj = netGO(genes, genesets, PPI, genesetV) # run netGO and save the result in 'obj' object
-netGOVis(obj, genes, genesets, R, Q, PPI) # visualize the result
+PrepareExampleGeneset() # Download and load example datasets contatining brca, genesets, PPI and genesetV
+obj = netGO(genes = brca[1:20], genesets = genesets, network = PPI, genesetV = genesetV) # run netGO
+netGOVis(obj = obj, genes = brca[1:20], genesets = genesets, R = 50, network = PPI) # Visualize the result
+
 ```
 
-#### Example Run (it may takes ~10 minutes to run)
-##### To run this example, please download following data from https://github.com/unistbig/netGO-Data/tree/master/Human .
-
-* PPIString.RData (PPI data)
-
-* brca.RData (DE gene list)
-
-* c2gs.RData (gene-set list)
-
-* genesetVString.z01~.zip (pre-calculated interaction data)
-
-Tip: <b>genesetVString.z01~.zip</b> are split zipped files. Uncompressing <b> ‘genesetVString.zip’</b> will create ‘genesetVString.RData’. 
+### Functions
+#### netGO
+netGO function takes six input parameters: 1) genes, 2) genesets, 3) network, 4) genesetV, 5) alpha (optional) and 6) nperm. Then it returns a data frame of gene-set p-values derived from netGO and Fisher’s exact test. Notice that, member of genes (denoted by A, B, C here) should be gene symbols when using the default STRING and mSigDB data. Other types of gene names are also available if the corresponding customized data (network and gene-set data) are used. The description for each input arguments follows.
+<br>
+-	genes: A character vector of input genes (e.g., DE genes). <br>
+-	genesets: A list of gene-sets consisting of groups of genes.<br>
+-	network: A numeric matrix of network data. The network score range is [0,1].<br>
+-	genesetV: A numeric matrix of pre-calculated interaction data between gene and gene-sets. The matrix dimension must be [ {# of genes} X {# of gene-sets}]. It can be built using BuildGenesetV function with network and gene-set objects as input arguments.
+<br>
 
 ```r
-library(devtools) 
-install_github('unistbig/shinyCyJS') 
-install_github('unistbig/netGO')
-library(netGO) 
-load('c2gs.RData') # contains genesets
-load('brca.RData') # contains brca
-load('genesetVString.RData') # contains genesetV
-load('PPIString.RData') # contains PPI
-obj = netGO(genes = brca[1:10], genesets = genesets, PPI = PPI, genesetV = genesetV)
-netGOVis(obj = obj, genes = brca[1:10], genesets = genesets, R = 30, Q = 0.25, PPI = PPI)
+genesetV = BuildGenesetV(network, genesets)
 ```
+-	alpha (optional): A numeric parameter reflecting the influence of the network data (e.g., PPI network). The value is between 0~1 and default is 0.5.<br>
+-	nperm: The number of permutations.<br>
+
+#### netGOVis (for visualization)
+netGOVis takes as six input parameters: 1) obj, 2) genes, 3) genesets, 4) network, 5) R (optional), 6) Q (optional). This function visualizes the result on the web browser (google chrome is recommended). The result graphs and table are downloadable from the web browser.<br>
+
+-	obj: A result data frame derived from ‘netGO’ function. It consists of three columns including 1) gene-set name and p-values evaluated from 2) netGO (netGOP) and 3) Fisher’s exact test (FisherP).<br>
+-	R (optional): Gene-set rank threshold, default is 50 (Top 50 gene-sets in either method will be shown).<br>
+-	Q (optional): Gene-set Q-value threshold, default is 1. (Gene-sets with Q-value <= 1 will be shown)<br>
+-	genes, genesets, network: same as in the ‘netGO’ function.<br>
