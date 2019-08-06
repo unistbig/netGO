@@ -239,13 +239,24 @@ netGOVis = function(obj, genes, genesets, network, R = 50, Q = NULL){
 }
 
 #' @export
-DownloadExampleData = function(){
+PrepareExampleData = function(){
   NowDir = getwd()
-  filelist = c('networkString.RData', 'brca.RData','brcaresult.RData','c2gs.RData')
-  print("please download genesetVString file manually")
+  filelist = c('networkString.RData', 'brca.RData','brcaresult.RData','c2gs.RData'
+               ,'genesetVString1.RData', 'genesetVString2.RData')
   filelist = setdiff(filelist, dir())
+
   urls = paste0('https://github.com/unistbig/netGO-Data/raw/master/Human/',filelist)
-  for(i in 1:length(urls)){
-    download.file(urls[i], filelist[i])
+  if(length(filelist)){
+    for(i in 1:length(urls)){
+      download.file(urls[i], filelist[i])
+    }
   }
+  filelist = c('networkString.RData', 'brca.RData','brcaresult.RData','c2gs.RData'
+               ,'genesetVString1.RData', 'genesetVString2.RData')
+  for(i in 1:length(filelist)){
+    load(filelist[i], envir = .GlobalEnv)
+  }
+
+  genesetV = rbind(genesetV1, genesetV2)
+
 }
