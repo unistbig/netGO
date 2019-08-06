@@ -1,6 +1,6 @@
 Package: netGO
 Title: Gene-Set Analysis and Visualize with Network information
-Version: 0.0.0.2
+Version: 0.0.0.4
 Authors@R: person("Jinhwan", "Kim", email = "kjh0530@unist.ac.kr", role = c("aut", "cre"))
 Description: netGO.
 Depends: R (>= 3.5.2),

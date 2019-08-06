@@ -23,40 +23,40 @@ getHyperPvalue = function(genes, genesets){
 IndexGenes = function(genes, rn){ sort(unlist(sapply(genes, function(i){ which(i==rn) }, USE.NAMES = F))) }
 
 #' @export
-GetSamplePPILV = function(genes, PPILV){ table(PPILV[genes]) }
+GetSamplenetworkLV = function(genes, networkLV){ table(networkLV[genes]) }
 
 #' @export
-Resample = function(SamplePPILV, PPILV){
+Resample = function(SamplenetworkLV, networkLV){
   res = c()
-  if(!is.na(SamplePPILV['0'])){ res = c(res, sample(which(PPILV == '0'), size = SamplePPILV['0'])) } # NA
-  if(!is.na(SamplePPILV['1'])){ res = c(res, sample(which(PPILV == '1'), size = SamplePPILV['1'])) } # 1Q
-  if(!is.na(SamplePPILV['2'])){ res = c(res, sample(which(PPILV == '2'), size = SamplePPILV['2'])) } # 2Q
-  if(!is.na(SamplePPILV['3'])){ res = c(res, sample(which(PPILV == '3'), size = SamplePPILV['3'])) } # 3Q
-  if(!is.na(SamplePPILV['4'])){ res = c(res, sample(which(PPILV == '4'), size = SamplePPILV['4'])) } # 4Q
+  if(!is.na(SamplenetworkLV['0'])){ res = c(res, sample(which(networkLV == '0'), size = SamplenetworkLV['0'])) } # NA
+  if(!is.na(SamplenetworkLV['1'])){ res = c(res, sample(which(networkLV == '1'), size = SamplenetworkLV['1'])) } # 1Q
+  if(!is.na(SamplenetworkLV['2'])){ res = c(res, sample(which(networkLV == '2'), size = SamplenetworkLV['2'])) } # 2Q
+  if(!is.na(SamplenetworkLV['3'])){ res = c(res, sample(which(networkLV == '3'), size = SamplenetworkLV['3'])) } # 3Q
+  if(!is.na(SamplenetworkLV['4'])){ res = c(res, sample(which(networkLV == '4'), size = SamplenetworkLV['4'])) } # 4Q
   # 10 Group added
-  if(!is.na(SamplePPILV['5'])){ res = c(res, sample(which(PPILV == '5'), size = SamplePPILV['5'])) } # 4Q
-  if(!is.na(SamplePPILV['6'])){ res = c(res, sample(which(PPILV == '6'), size = SamplePPILV['6'])) } # 4Q
-  if(!is.na(SamplePPILV['7'])){ res = c(res, sample(which(PPILV == '7'), size = SamplePPILV['7'])) } # 4Q
-  if(!is.na(SamplePPILV['8'])){ res = c(res, sample(which(PPILV == '8'), size = SamplePPILV['8'])) } # 4Q
-  if(!is.na(SamplePPILV['9'])){ res = c(res, sample(which(PPILV == '9'), size = SamplePPILV['9'])) } # 4Q
-  if(!is.na(SamplePPILV['10'])){ res = c(res, sample(which(PPILV == '10'), size = SamplePPILV['10'])) } # 4Q
+  if(!is.na(SamplenetworkLV['5'])){ res = c(res, sample(which(networkLV == '5'), size = SamplenetworkLV['5'])) } # 4Q
+  if(!is.na(SamplenetworkLV['6'])){ res = c(res, sample(which(networkLV == '6'), size = SamplenetworkLV['6'])) } # 4Q
+  if(!is.na(SamplenetworkLV['7'])){ res = c(res, sample(which(networkLV == '7'), size = SamplenetworkLV['7'])) } # 4Q
+  if(!is.na(SamplenetworkLV['8'])){ res = c(res, sample(which(networkLV == '8'), size = SamplenetworkLV['8'])) } # 4Q
+  if(!is.na(SamplenetworkLV['9'])){ res = c(res, sample(which(networkLV == '9'), size = SamplenetworkLV['9'])) } # 4Q
+  if(!is.na(SamplenetworkLV['10'])){ res = c(res, sample(which(networkLV == '10'), size = SamplenetworkLV['10'])) } # 4Q
   return(names(res))
 }
 
 #' @export
-getPPI = function(PPI){
+getnetwork = function(network){
 
-  PPISum = sapply(1:nrow(PPI),function(i){sum(PPI[i,],na.rm = T)})
+  networkSum = sapply(1:nrow(network),function(i){sum(network[i,],na.rm = T)})
 
-  rn = rownames(PPI)
+  rn = rownames(network)
 
-  names(PPISum) = rn
+  names(networkSum) = rn
   res = rep(0,length(rn))
 
   # 10 Group
-  v = unname(quantile(PPISum, probs = seq(0,1,1/9)))
+  v = unname(quantile(networkSum, probs = seq(0,1,1/9)))
   for(i in 1:length(rn)){
-    a = unname(PPISum[rn[i]])
+    a = unname(networkSum[rn[i]])
     if(is.na(a)){res[i] = 0;}
     else if(a <= v[2]){res[i] = 1}
     else if(a <= v[3]){res[i] = 2}
@@ -69,9 +69,9 @@ getPPI = function(PPI){
     else if(a <= v[10]){res[i] = 9}
   }
 
-  PPILV = res
-  names(PPILV) = rn
-  return(PPILV)
+  networkLV = res
+  names(networkLV) = rn
+  return(networkLV)
 }
 
 #' @export
@@ -87,9 +87,9 @@ L = function(A){length(A)}
 UNI = function(A,B){union(A,B)}
 
 #' @export
-pMM = function(genes, genesI, genesets, genesetsI, LGS, PPI ){
+pMM = function(genes, genesI, genesets, genesetsI, LGS, network ){
   ALPHA = 1
-  P = function(A,B){ sum(PPI[A,B]) }
+  P = function(A,B){ sum(network[A,B]) }
 
   OVL = sapply(1:L(genesets), function(i){L(INT(genesets[[i]], genes))}) / L(genes)
 
@@ -119,42 +119,42 @@ pMM2 = function(genes, genesets, genesI, genesetV, RS, alpha){
 }
 
 #' @export
-getPvalue = function(genes, genesets, PPI, genesetV, alpha, nperm ){
+getPvalue = function(genes, genesets, network, genesetV, alpha, nperm ){
 
   LGS = sapply(1:L(genesets), function(i){length(genesets[[i]])})
 
-  RS = sapply(1:nrow(PPI), function(i){sum(PPI[,i])})
-  names(RS) = rownames(PPI)
+  RS = sapply(1:nrow(network), function(i){sum(network[,i])})
+  names(RS) = rownames(network)
   sim = function(){
-    sampled = Resample(SamplePPILV, PPILV)
-    sampledI = IndexGenes(sampled,rownames(PPI))
-    as.numeric(pMM(sampled, sampledI, genesets, genesetsI, LGS, PPI) <= od)
+    sampled = Resample(SamplenetworkLV, networkLV)
+    sampledI = IndexGenes(sampled,rownames(network))
+    as.numeric(pMM(sampled, sampledI, genesets, genesetsI, LGS, network) <= od)
   }
 
   sim2 = function(){
-    sampled = Resample(SamplePPILV, PPILV)
+    sampled = Resample(SamplenetworkLV, networkLV)
     sampledI = IndexGenes(sampled,rn)
     as.numeric(pMM2(sampled, genesets, sampledI, genesetV, RS, alpha) <= od)
   }
-  genesI = IndexGenes(genes,rownames(PPI)) # 0
+  genesI = IndexGenes(genes,rownames(network)) # 0
 
-  #genesetsI = BuildGenesetsI(rownames(PPI), genesets) # 30 second
+  #genesetsI = BuildGenesetsI(rownames(network), genesets) # 30 second
 
-  PPILV = getPPI(PPI) # 13 second
+  networkLV = getnetwork(network) # 13 second
 
-  # od = pMM(genes, genesI, genesets, genesetsI, LGS, PPI) # 0.1 second
+  # od = pMM(genes, genesI, genesets, genesetsI, LGS, network) # 0.1 second
   od = pMM2(genes, genesets, genesI, genesetV, RS, alpha)
 
-  SamplePPILV = GetSamplePPILV(genes, PPILV) # 0 second
+  SamplenetworkLV = GetSamplenetworkLV(genes, networkLV) # 0 second
 
   numCores = parallel::detectCores()
   cl = parallel::makeCluster(numCores-1)
   on.exit(parallel::stopCluster(cl))
   doParallel::registerDoParallel(cl)
-  rn = rownames(PPI)
+  rn = rownames(network)
   # ~ 1 second
   #pv = foreach( i=1:REP, .inorder = FALSE, .combine = '+', .verbose = TRUE ) %dopar% { sim() }
-  pv = foreach(i = 1:nperm, .inorder = FALSE, .combine = '+', .noexport = 'PPI') %dopar% {sim2()}
+  pv = foreach(i = 1:nperm, .inorder = FALSE, .combine = '+', .noexport = 'network') %dopar% {sim2()}
   #pv = Reduce(`+`,pv)
 
   pv = (pv+1)/(nperm+1)
@@ -163,17 +163,17 @@ getPvalue = function(genes, genesets, PPI, genesetV, alpha, nperm ){
 }
 
 #' @export
-BuildGenesetV = function(PPI, genesets){
-  GenesetV = matrix(0,nrow(PPI), length(genesets))
-  GetV = function(geneA, geneB){return(sum(PPI[geneA,geneB]))}
+BuildGenesetV = function(network, genesets){
+  GenesetV = matrix(0,nrow(network), length(genesets))
+  GetV = function(geneA, geneB){return(sum(network[geneA,geneB]))}
   # added genesets indexing ; too slow as symbol
   for(i in 1:length(genesets)){
-    v = intersect(rownames(PPI), genesets[[i]])
-    v = sapply(1:length(v), function(j){which(rownames(PPI)==v[[j]])})
+    v = intersect(rownames(network), genesets[[i]])
+    v = sapply(1:length(v), function(j){which(rownames(network)==v[[j]])})
     genesets[[i]]=v
   }
 
-  for(i in 1:nrow(PPI)){
+  for(i in 1:nrow(network)){
     SubGeneset = rep(0,length(genesets))
     ThisGene = i
     for(j in 1:length(genesets)){
@@ -184,20 +184,20 @@ BuildGenesetV = function(PPI, genesets){
     }
     GenesetV[i,] = SubGeneset
   }
-  rownames(GenesetV) = rownames(PPI)
+  rownames(GenesetV) = rownames(network)
   colnames(GenesetV) = names(genesets)
   return(GenesetV)
 }
 
 #' @export
-netGO = function(genes, genesets, PPI, genesetV, nperm = 10000, alpha = 0.5){
+netGO = function(genes, genesets, network, genesetV, nperm = 10000, alpha = 0.5){
 
   require(foreach)
   require(parallel)
   require(doParallel)
 
   pvh = getHyperPvalue(genes, genesets)
-  pv = getPvalue(genes, genesets, PPI, genesetV, alpha, nperm)
+  pv = getPvalue(genes, genesets, network, genesetV, alpha, nperm)
   ret = data.frame(pv,pvh)
   ret = cbind(rownames(ret),ret)
   colnames(ret) = c('gene-set','netGOP','FisherP')
@@ -207,7 +207,7 @@ netGO = function(genes, genesets, PPI, genesetV, nperm = 10000, alpha = 0.5){
 }
 
 #' @export
-netGOVis = function(obj, genes, genesets, PPI, R = 50, Q = NULL){
+netGOVis = function(obj, genes, genesets, network, R = 50, Q = NULL){
   suppressPackageStartupMessages('')
   # arg1 -> inst/FOLDERNAME ( GScluster )
   # arg2 -> ...?
@@ -223,12 +223,12 @@ netGOVis = function(obj, genes, genesets, PPI, R = 50, Q = NULL){
 
   .GlobalEnv$.obj = obj
   .GlobalEnv$.genes = genes
-  .GlobalEnv$.PPI = PPI
+  .GlobalEnv$.network = network
   .GlobalEnv$.genesets = genesets
   .GlobalEnv$.Q = Q
   .GlobalEnv$.R = R
 
-  on.exit(rm(list=c('.obj', '.genes', '.PPI','.genesets','.R','.Q'),
+  on.exit(rm(list=c('.obj', '.genes', '.network','.genesets','.R','.Q'),
              envir=.GlobalEnv))
 
   shiny::runApp(
@@ -236,4 +236,16 @@ netGOVis = function(obj, genes, genesets, PPI, R = 50, Q = NULL){
     launch.browser = TRUE,
     display.mode ='normal'
   )
+}
+
+#' @export
+DownloadData = function(){
+  NowDir = getwd()
+  filelist = c('networkString.RData', 'brca.RData','brcaresult.RData','c2gs.RData')
+  print("please download genesetVString file manually")
+  filelist = setdiff(filelist, dir())
+  urls = paste0('https://github.com/unistbig/netGO-Data/raw/master/Human/',filelist)
+  for(i in 1:length(urls)){
+    download.file(urls[i], filelist[i])
+  }
 }

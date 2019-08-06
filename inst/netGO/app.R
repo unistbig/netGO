@@ -66,8 +66,8 @@ buildIG = function(genes, color = 'sky'){
 nodetojs = function(genes){paste0("cy.nodes('", paste('#',genes,sep='',collapse = ','),"')")}
 
 sigIdx = function(obj, R, Q){
-  pv = ret$netGOP
-  pvh = ret$FisherP
+  pv = obj$netGOP
+  pvh = obj$FisherP
   if(!is.null(Q)){
     idx = which(p.adjust(pv,'fdr') <= Q | p.adjust(pvh,'fdr') <= Q)
     return(idx)
@@ -81,15 +81,15 @@ sigIdx = function(obj, R, Q){
 
 buildCol = function(obj, R, Q){
   if(!is.null(Q)){
-    A = unname(which(p.adjust(ret$netGOP,'fdr')<=Q))
-    B = unname(which(p.adjust(ret$FisherP,'fdr')<=Q))
+    A = unname(which(p.adjust(obj$netGOP,'fdr')<=Q))
+    B = unname(which(p.adjust(obj$FisherP,'fdr')<=Q))
   }
   else{
-    A = unname(which(rank(ret$netGOP, ties.method = 'first')<=R))
-    B = unname(which(rank(ret$FisherP, ties.method = 'first')<=R))
+    A = unname(which(rank(obj$netGOP, ties.method = 'first')<=R))
+    B = unname(which(rank(obj$FisherP, ties.method = 'first')<=R))
   }
   C = intersect(A,B)
-  res = rep('NONE', length(ret$netGOP))
+  res = rep('NONE', length(obj$netGOP))
   if(length(A)){res[A] = 'netGO'}
   if(length(B)){res[B] = 'Fisher'}
   if(length(C)){res[C] = 'in Both'}
@@ -228,7 +228,7 @@ server = function(input,output,session){
   # build example network
   si = sigIdx(obj,R = R,Q = Q)
 
-  myTab = cbind(names(si),round(cbind(p.adjust(ret$netGOP,'fdr'),p.adjust(ret$FisherP,'fdr'))[si,],4))
+  myTab = cbind(names(si),round(cbind(p.adjust(obj$netGOP,'fdr'),p.adjust(obj$FisherP,'fdr'))[si,],4))
   myTab = data.frame(myTab, stringsAsFactors = FALSE)
 
   myTab[,2] = as.numeric(myTab[,2])
