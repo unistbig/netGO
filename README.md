@@ -28,6 +28,7 @@ netGOVis(obj = obj, genes = brca[1:20], genesets = genesets, R = 50, network = P
 
 ### Functions
 #### 1. netGO
+This function returns a data frame of gene-set p-values derived from netGO and Fisher’s exact test.
 #### Input arguments
 
 -	genes: A character vector of input genes (e.g., DE genes). <br>
@@ -42,10 +43,7 @@ genesetV = BuildGenesetV(network, genesets)
 -	alpha (optional): A numeric parameter reflecting the influence of the network data (e.g., PPI network). The value is between 0~1 and default is 0.5.<br>
 -	nperm: The number of permutations.<br>
 
-#### Output
-A data frame of gene-set p-values derived from netGO and Fisher’s exact test
-<br>
-Notice that, member of genes should be gene symbols when using the default STRING and mSigDB data. Other types of gene names are also available if the corresponding customized data (network and gene-set data) are used.
+**Notice that, member of genes should be gene symbols when using the default STRING and mSigDB data. Other types of gene names are also available if the corresponding customized data (network and gene-set data) are used.
 
 #### 2. netGOVis (for visualization)
 This function visualizes the result on the web browser (google chrome is recommended). The result graphs and table are downloadable from the web browser.<br>
