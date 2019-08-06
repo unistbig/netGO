@@ -3,7 +3,7 @@
 export(BuildCutoffPPI)
 export(BuildGenesetV)
 export(BuildGenesetsI)
-export(DownloadData)
+export(DownloadExampleData)
 export(GetSamplenetworkLV)
 export(IndexGenes)
 export(Resample)
