@@ -239,7 +239,7 @@ netGOVis = function(obj, genes, genesets, network, R = 50, Q = NULL){
 }
 
 #' @export
-DownloadData = function(){
+DownloadExampleData = function(){
   NowDir = getwd()
   filelist = c('networkString.RData', 'brca.RData','brcaresult.RData','c2gs.RData')
   print("please download genesetVString file manually")
