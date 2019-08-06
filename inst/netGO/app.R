@@ -5,12 +5,6 @@
 
 # Data prepare
 
-# genes = c('COL17A1','KCNJ16','FXYD1','OXTR','SCARA5','SAMD5','MYH11','SLC7A3','COL6A6',
-         #'CD300LG','SDPR','MAMDC2','CAPN11','HAS3','KCNE1','ZBTB16','TSHZ2','AK5','SEMA5A','PGM5')
-
-# load("c2gs.RData")
-# load('obj.RData')
-# load("PPIString.RData")
 
 # netGOVis
 
@@ -22,31 +16,10 @@ suppressPackageStartupMessages(library(googleVis))
 
 obj = .GlobalEnv$.obj
 genes = .GlobalEnv$.genes
-PPI = .GlobalEnv$.PPI
+network = .GlobalEnv$.network
 genesets = .GlobalEnv$.genesets
 Q = .GlobalEnv$.Q
 R = .GlobalEnv$.R
-
-if(!is.null(.obj)){ obj = .obj } else{
-  print("obj not given, read Demo file")
-  load("obj.Rdata")
-}
-
-if(!is.null(.genes)){ genes = .genes } else{
-  print("genes not given, read Demo file")
-  load("genes.Rdata")
-}
-
-if(!is.null(.PPI)){ PPI = .PPI } else{
-  print("PPI not given, read Demo file")
-  load("PPIString.Rdata")
-}
-
-if(!is.null(.genesets)){ genesets = .genesets } else{
-  print("genesets not given, read Demo file")
-  load("c2gs.Rdata")
-}
-
 
 buildIG = function(genes, color = 'sky'){
   if(length(genes)==0){return();}
@@ -68,6 +41,7 @@ nodetojs = function(genes){paste0("cy.nodes('", paste('#',genes,sep='',collapse 
 sigIdx = function(obj, R, Q){
   pv = obj$netGOP
   pvh = obj$FisherP
+  names(pv) = names(pvh) = obj[,1]
   if(!is.null(Q)){
     idx = which(p.adjust(pv,'fdr') <= Q | p.adjust(pvh,'fdr') <= Q)
     return(idx)
@@ -98,17 +72,17 @@ buildCol = function(obj, R, Q){
 
 getIntersect = function(gene,geneset){
   elements = list()
-  gs = intersect(geneset,rownames(PPI))
-  g = intersect(gene,rownames(PPI))
+  gs = intersect(geneset,rownames(network))
+  g = intersect(gene,rownames(network))
 
   edges = list()
   nwe = c()
 
   for(i in 1:length(g)){
-    E = PPI[g[i],names(which(PPI[g[i],gs]>0))]
+    E = network[g[i],names(which(network[g[i],gs]>0))]
     if(length(E)>0){
       if(length(E)==1){
-        n = names(which(PPI[g[i],gs]>0))
+        n = names(which(network[g[i],gs]>0))
         edges[[length(edges)+1]] =
           buildEdge(source = g[i], target = n, width = (E+.5)*3, lineColor = '#4B4B4B', opacity = 0)
         nwe = append(nwe, n, after = length(nwe))
@@ -226,9 +200,11 @@ buildelement = function(genes, sGs){
 
 server = function(input,output,session){
   # build example network
+
   si = sigIdx(obj,R = R,Q = Q)
 
   myTab = cbind(names(si),round(cbind(p.adjust(obj$netGOP,'fdr'),p.adjust(obj$FisherP,'fdr'))[si,],4))
+
   myTab = data.frame(myTab, stringsAsFactors = FALSE)
 
   myTab[,2] = as.numeric(myTab[,2])
@@ -264,7 +240,7 @@ server = function(input,output,session){
 
   myData = data.frame(
     name = names(si),
-    network = unname(sapply(si, function(i){sum(PPI[intersect(rownames(PPI),genes),intersect(rownames(PPI), genesets[[i]])])/ length(genesets[[i]]) })),
+    network = unname(sapply(si, function(i){sum(network[intersect(rownames(network),genes),intersect(rownames(network), genesets[[i]])])/ length(genesets[[i]]) })),
     overlap = unname(sapply(si, function(i){length(intersect(genes,genesets[[i]]))/ length(genesets[[i]])})),
     pvalue_log10 = sapply(names(si), function(i){ as.numeric(-log10(as.numeric(myTab[i,2]) )) }),
     significant = buildCol(obj, R = R, Q = Q)[si]
