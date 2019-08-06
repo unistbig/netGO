@@ -26,7 +26,7 @@ netGOVis(obj = obj, genes = brca[1:20], genesets = genesets, R = 50, network = P
 
 ```
 
-### Functions
+### Main functions
 
 <hr>
 
