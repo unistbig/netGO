@@ -44,6 +44,7 @@ genesetV = BuildGenesetV(network, genesets)
 -	nperm: The number of permutations.<br>
 
 **Notice** that, member of genes should be gene symbols when using the default STRING and mSigDB data. Other types of gene names are also available if the corresponding customized data (network and gene-set data) are used.
+<hr>
 
 #### 2. netGOVis (for visualization)
 This function visualizes the result on the web browser (google chrome is recommended). The result graphs and table are downloadable from the web browser.<br>
