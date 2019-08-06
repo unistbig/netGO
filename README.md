@@ -13,7 +13,7 @@ install_github(‘unistbig/shinyCyJS’)
 #### R codes to run netGO
 
 ```r
-library(devtools) # load devtools to use install_github command
+library(devtools) # load devtools to use 'install_github' function
 install_github('unistbig/shinyCyJS') # install shinyCyJS
 install_github('unistbig/netGO') # install netGO
 library(netGO) # load netGO
