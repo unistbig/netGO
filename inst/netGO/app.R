@@ -66,8 +66,8 @@ buildIG = function(genes, color = 'sky'){
 nodetojs = function(genes){paste0("cy.nodes('", paste('#',genes,sep='',collapse = ','),"')")}
 
 sigIdx = function(obj, R, Q){
-  pv = obj$pv
-  pvh = obj$pvh
+  pv = ret$netGOP
+  pvh = ret$FisherP
   if(!is.null(Q)){
     idx = which(p.adjust(pv,'fdr') <= Q | p.adjust(pvh,'fdr') <= Q)
     return(idx)
@@ -81,17 +81,17 @@ sigIdx = function(obj, R, Q){
 
 buildCol = function(obj, R, Q){
   if(!is.null(Q)){
-    A = unname(which(p.adjust(obj$pv,'fdr')<=Q))
-    B = unname(which(p.adjust(obj$pvh,'fdr')<=Q))
+    A = unname(which(p.adjust(ret$netGOP,'fdr')<=Q))
+    B = unname(which(p.adjust(ret$FisherP,'fdr')<=Q))
   }
   else{
-    A = unname(which(rank(obj$pv, ties.method = 'first')<=R))
-    B = unname(which(rank(obj$pvh, ties.method = 'first')<=R))
+    A = unname(which(rank(ret$netGOP, ties.method = 'first')<=R))
+    B = unname(which(rank(ret$FisherP, ties.method = 'first')<=R))
   }
   C = intersect(A,B)
-  res = rep('NONE', length(obj$pv))
+  res = rep('NONE', length(ret$netGOP))
   if(length(A)){res[A] = 'netGO'}
-  if(length(B)){res[B] = 'Hyper'}
+  if(length(B)){res[B] = 'Fisher'}
   if(length(C)){res[C] = 'in Both'}
   res
 }
@@ -110,13 +110,13 @@ getIntersect = function(gene,geneset){
       if(length(E)==1){
         n = names(which(PPI[g[i],gs]>0))
         edges[[length(edges)+1]] =
-          buildEdge(source = g[i], target = n, width = E+.5, lineColor = '#4B4B4B', opacity = 0)
+          buildEdge(source = g[i], target = n, width = (E+.5)*3, lineColor = '#4B4B4B', opacity = 0)
         nwe = append(nwe, n, after = length(nwe))
         next
       }
       for(j in 1:length(E)){
         edges[[length(edges)+1]] =
-          buildEdge(source = g[i], target = names(E)[j], width = unname(E)[j]+.5, lineColor = '#4B4B4B', opacity = 0)
+          buildEdge(source = g[i], target = names(E)[j], width = (unname(E)[j]+.5)*3, lineColor = '#4B4B4B', opacity = 0)
         nwe = append(nwe, names(E)[j], after = length(nwe))
       }
     }
@@ -180,7 +180,6 @@ ui = function(){
     tags$head(tags$script(src="svg.min.js")),
     tags$link(rel = "stylesheet", type = "text/css", href = "cytoscape.js-panzoom.css"),
     tags$head(tags$script(src="additional_script.js")),
-
     tags$head(tags$style('#view{height:50%;margin:1em;margin-top:4em};')),
     div(id='create', display='none'), # EMPTY DIV FOR DOWNLOAD SVG
 
@@ -189,9 +188,10 @@ ui = function(){
       position = 'right',
       sidebarPanel(
         DTOutput(outputId='table1'),
-        actionButton(inputId='btn2',label='Plot Gene-set network',style='position:absolute;right:18em;margin-bottom:1em;'),
+        #actionButton(inputId='btn2',label='Plot Gene-set network',style='position:absolute;right:18em;margin-bottom:1em;'),
         downloadButton(outputId = "btn3", label = "Download Table",style='position:absolute;right:6em;margin-bottom:1em;'),
         htmlOutput("view"),
+
         width = 6
       ),
       mainPanel(
@@ -202,9 +202,12 @@ ui = function(){
         ShinyCyJSOutput(outputId = 'cy', height = '95%'),
         actionButton(
           inputId = 'btn4',
+          icon = icon('download'),
           label = 'Download Graph',
           style='position:absolute; z-index:9999;right:1em;top:0.5em;'
         ),
+        span(textOutput(outputId = 'txt1'), style='font-weight: bold;position: absolute;z-index: 9999;left: 10%;top: 0.5em;'),
+        span(tags$img(src = 'legend.png', style='width:20em'), style ='position: absolute;bottom: 1em;z-index: 9999;'),
         width = 6
       )
     )
@@ -225,17 +228,18 @@ server = function(input,output,session){
   # build example network
   si = sigIdx(obj,R = R,Q = Q)
 
-  myTab = cbind(names(si),round(cbind(obj$pv,obj$pvh)[si,],4))
+  myTab = cbind(names(si),round(cbind(p.adjust(ret$netGOP,'fdr'),p.adjust(ret$FisherP,'fdr'))[si,],4))
   myTab = data.frame(myTab, stringsAsFactors = FALSE)
 
   myTab[,2] = as.numeric(myTab[,2])
   myTab[,3] = as.numeric(myTab[,3])
   rownames(myTab) = myTab[,1]
-  colnames(myTab) = c("Gene-set name","netGO","Hyper")
+  colnames(myTab) = c("Gene-set name","netGO q-value","Fisher's exact text q-value")
   myTab = myTab[order(myTab[,2]),]
   sGs = genesets[[myTab[1,1]]]
 
   elements = buildelement(genes, sGs)
+  output$txt1 = renderText(paste0('Gene-set :',myTab[1,1]) )
   output$cy = renderShinyCyJS(shinyCyJS(elements))
 
   afterCall()
@@ -258,13 +262,16 @@ server = function(input,output,session){
     )
   )
 
-  myData = list(
+  myData = data.frame(
     name = names(si),
-    overlap = unname(sapply(si, function(i){length(intersect(genes,genesets[[i]]))/ length(genesets[[i]])})),
     network = unname(sapply(si, function(i){sum(PPI[intersect(rownames(PPI),genes),intersect(rownames(PPI), genesets[[i]])])/ length(genesets[[i]]) })),
+    overlap = unname(sapply(si, function(i){length(intersect(genes,genesets[[i]]))/ length(genesets[[i]])})),
     pvalue_log10 = sapply(names(si), function(i){ as.numeric(-log10(as.numeric(myTab[i,2]) )) }),
     significant = buildCol(obj, R = R, Q = Q)[si]
   )
+
+  myData = myData[order(myData[,'significant'], decreasing = TRUE),]
+
 
   output$view = renderGvis({
     gvisBubbleChart(
@@ -273,9 +280,11 @@ server = function(input,output,session){
       options = list(
         width = '100%', height = '100%',
         chartArea = "{left:'5%',top:'5%',width:'80%',height:'80%'}",
-        colors= "['#8e44ad','#e74c3c', '#2980b9', '#2ecc71']",
-        hAxis = "{title : 'Overlap'}",
-        vAxis = "{title : 'Interact'}",
+        # netGO Hyper Both
+        # Red #ff7675 Blue #74b9ff Purple #a29bfe
+        colors= "['#ff7675', '#a29bfe', '#74b9ff']",
+        hAxis = "{title : 'Overlap Score'}",
+        vAxis = "{title : 'Network Score'}",
         colorAxis = "{legend:{position:'none'}}",
         bubble = '{textStyle:{color : "none" }}',# no label
         explorer ='{}'), chartid = 'BubbleChart'
@@ -295,6 +304,16 @@ server = function(input,output,session){
   # download network svg form
   observeEvent(input$btn4,{ js$download() })
 
+  observeEvent(input$table1_rows_selected, {
+    runjs('cy.$().remove();')
+    sIdx = input$table1_rows_selected
+    sGs <<- genesets[[rownames(myTab)[sIdx]]]
+    elements = buildelement(genes, sGs)
+    output$txt1 = renderText(paste0('Gene-set :',rownames(myTab)[sIdx]))
+    output$cy = renderShinyCyJS(shinyCyJS(elements))
+    fit(genes, sGs)
+  })
+
   output$btn3 = downloadHandler(
     filename = function(){paste0("netGO-", Sys.Date(), ".txt")},
     content = function(file) {
@@ -309,7 +328,7 @@ server = function(input,output,session){
         }
       }
       g = sapply(1:nrow(myTab), function(i){paste0(sort(g[[i]]), collapse = ',') })
-      text =c('Gene-set\tSize\tnetGO-Pvalue\tHyper-Pvalue\tGenes')
+      text =c('Gene-set\tSize\tnetGO-Qvalue\tFisher-Qvalue\tGenes')
       for(i in 1:(length(set))){
         text[i+1] = paste(set[i], size[i], pv1[i],pv2[i],g[[i]], sep = '\t')
       }

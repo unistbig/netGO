@@ -119,7 +119,7 @@ pMM2 = function(genes, genesets, genesI, genesetV, RS, alpha){
 }
 
 #' @export
-getPvalue = function(genes, genesets, PPI, genesetV, alpha, REP = 10000){
+getPvalue = function(genes, genesets, PPI, genesetV, alpha, nperm ){
 
   LGS = sapply(1:L(genesets), function(i){length(genesets[[i]])})
 
@@ -154,10 +154,10 @@ getPvalue = function(genes, genesets, PPI, genesetV, alpha, REP = 10000){
   rn = rownames(PPI)
   # ~ 1 second
   #pv = foreach( i=1:REP, .inorder = FALSE, .combine = '+', .verbose = TRUE ) %dopar% { sim() }
-  pv = foreach(i = 1:REP, .inorder = FALSE, .combine = '+', .noexport = 'PPI') %dopar% {sim2()}
+  pv = foreach(i = 1:nperm, .inorder = FALSE, .combine = '+', .noexport = 'PPI') %dopar% {sim2()}
   #pv = Reduce(`+`,pv)
 
-  pv = (pv+1)/(REP+1)
+  pv = (pv+1)/(nperm+1)
   names(pv) = names(genesets)
   return(pv)
 }
@@ -190,15 +190,20 @@ BuildGenesetV = function(PPI, genesets){
 }
 
 #' @export
-netGO = function(genes, genesets, PPI, genesetV, alpha = 0.5){
+netGO = function(genes, genesets, PPI, genesetV, nperm = 10000, alpha = 0.5){
 
   require(foreach)
   require(parallel)
   require(doParallel)
 
   pvh = getHyperPvalue(genes, genesets)
-  pv = getPvalue(genes, genesets, PPI, genesetV, alpha)
-  return(list(pv = pv, pvh = pvh))
+  pv = getPvalue(genes, genesets, PPI, genesetV, alpha, nperm)
+  ret = data.frame(pv,pvh)
+  ret = cbind(rownames(ret),ret)
+  colnames(ret) = c('gene-set','netGOP','FisherP')
+  rownames(ret) = NULL
+  ret = ret[order(ret$netGOP),]
+  return(ret)
 }
 
 #' @export
