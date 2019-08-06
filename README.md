@@ -21,8 +21,8 @@ obj = netGO(genes, genesets, PPI, genesetV) # run netGO and save the result in '
 netGOVis(obj, genes, genesets, R, Q, PPI) # visualize the result
 ```
 
-### Example (it may takes ~10 minutes to run)
-#### To run toy example, please download following data from https://github.com/unistbig/netGO-Data/tree/master/Human .
+#### Example Run (it may takes ~10 minutes to run)
+##### To run this example, please download following data from https://github.com/unistbig/netGO-Data/tree/master/Human .
 
 * PPIString.RData (PPI data)
 
