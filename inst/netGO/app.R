@@ -178,7 +178,7 @@ ui = function(){
           inputId = 'btn4',
           icon = icon('download'),
           label = 'Download Graph',
-          style='position:absolute; z-index:9999;right:1em;top:0.5em;'
+          style='position:absolute; z-index:9999;right:1em;top:2.5em;'
         ),
         span(textOutput(outputId = 'txt1'), style='font-weight: bold;position: absolute;z-index: 9999;left: 10%;top: 0.5em;'),
         span(tags$img(src = 'legend.png', style='width:20em'), style ='position: absolute;bottom: 1em;z-index: 9999;'),
@@ -233,10 +233,11 @@ server = function(input,output,session){
       scroller = TRUE,
       dom = 'ltipr',
       autoWidth = TRUE
-      #,columnDefs = list(
-        #list(width = '140px', targets = 1),
-        #list(width ='200px', targets = 2)
-      #)
+      ,columnDefs = list(
+        list(width = '30%', targets = 0),
+        list(width = '10%', targets = 1),
+        list(width ='10%', targets = 2)
+      )
 
     ),
     selection = 'single'

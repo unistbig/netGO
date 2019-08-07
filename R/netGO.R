@@ -259,5 +259,4 @@ DownloadExampleData = function(){
 
   genesetV = rbind(genesetV1, genesetV2)
   assign('genesetV',genesetV,envir = .GlobalEnv)
-  return()
 }
