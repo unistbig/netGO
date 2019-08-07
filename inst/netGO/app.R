@@ -163,11 +163,12 @@ ui = function(){
     sidebarLayout(
       position = 'right',
       sidebarPanel(
+        downloadButton(outputId = "btn3", label = "Download Table",style='position:absolute;right:3.6em;'),
         div(
           DTOutput(outputId='table1',height = '25%', width ='100%'),
-          style='height:30%'),
+          style='height:30%; position:absolute;top:6%;width:90%;'),
         #actionButton(inputId='btn2',label='Plot Gene-set network',style='position:absolute;right:18em;margin-bottom:1em;'),
-        downloadButton(outputId = "btn3", label = "Download Table",style='position:absolute;right:3.6em;top:40%;'),
+
         htmlOutput("view"),
 
         width = 6
