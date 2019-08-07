@@ -2,7 +2,7 @@
 R/Shiny package for network-integrated pathway enrichment analysis
 
 ### Introduction
-netGO is an R/Shiny package for network-integrated pathway enrichment analysis. It provides gene-set enrichment analysis results evaluated from netGO and simple Fisher’s exact test. It also provides visualization to let the users easily compare the results derived from two methods. The R/Shiny package is available at Github ( https://github.com/unistbig/netGO ). Currently, netGO provides network and gene-set data of four species including human, mouse, yeast and arabidopsis. Such accessory data are available at another repository (https://github.com/unistbig/netGO-Data/)
+netGO is an R-Shiny package for network-integrated pathway enrichment analysis. It also provides the conventional Fisher’s exact test. Specifically, it provides user-interactive visualization of enrichment analysis results and related networks. The netGO package is available at Github (https://github.com/unistbig/netGO). Currently, netGO provides network and annotation gene-set data for four species including human, mouse, yeast, and Arabidopsis thaliana. These data are all available from another repository (https://github.com/unistbig/netGO-Data/)
 
 ### Install and Launch
 #### * Prerequisites : Please install following R packages
