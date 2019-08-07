@@ -239,11 +239,11 @@ server = function(input,output,session){
       scroller = TRUE,
       scrollX = TRUE,
       dom = 'ltipr'
-      ,autoWidth = FALSE
+      ,autoWidth = TRUE
       ,columnDefs = list(
-        #list(width ='10em', targets = 0),
-        list(width ='200px', targets = 1),
-        list(width ='200px', targets = 2)
+        list(width ='75%', targets = 0),
+        list(width ='150px', targets = c(1,2))
+        #list(width ='200px', targets = 2)
       )
     ),
     selection = 'single',
