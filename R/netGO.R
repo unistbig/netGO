@@ -239,7 +239,7 @@ netGOVis = function(obj, genes, genesets, network, R = 50, Q = NULL){
 }
 
 #' @export
-PrepareExampleData = function(){
+DownloadExampleData = function(){
   NowDir = getwd()
   filelist = c('networkString.RData', 'brca.RData','brcaresult.RData','c2gs.RData'
                ,'genesetVString1.RData', 'genesetVString2.RData')
@@ -258,5 +258,6 @@ PrepareExampleData = function(){
   }
 
   genesetV = rbind(genesetV1, genesetV2)
-
+  assign('genesetV',genesetV,envir = .GlobalEnv)
+  return()
 }

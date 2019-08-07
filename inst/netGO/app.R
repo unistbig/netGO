@@ -66,7 +66,7 @@ buildCol = function(obj, R, Q){
   res = rep('NONE', length(obj$netGOP))
   if(length(A)){res[A] = 'netGO'}
   if(length(B)){res[B] = 'Fisher'}
-  if(length(C)){res[C] = 'in Both'}
+  if(length(C)){res[C] = 'Both'}
   res
 }
 
@@ -210,7 +210,7 @@ server = function(input,output,session){
   myTab[,2] = as.numeric(myTab[,2])
   myTab[,3] = as.numeric(myTab[,3])
   rownames(myTab) = myTab[,1]
-  colnames(myTab) = c("Gene-set name","netGO q-value","Fisher's exact text q-value")
+  colnames(myTab) = c("Gene-set name","netGO\nq-value","Fisher's exact test\nq-value")
   myTab = myTab[order(myTab[,2]),]
   sGs = genesets[[myTab[1,1]]]
 
@@ -258,7 +258,7 @@ server = function(input,output,session){
         chartArea = "{left:'5%',top:'5%',width:'80%',height:'80%'}",
         # netGO Hyper Both
         # Red #ff7675 Blue #74b9ff Purple #a29bfe
-        colors= "['#ff7675', '#a29bfe', '#74b9ff']",
+        colors= "['#ff7675', '#74b9ff','#a29bfe']",
         hAxis = "{title : 'Overlap Score'}",
         vAxis = "{title : 'Network Score'}",
         colorAxis = "{legend:{position:'none'}}",
