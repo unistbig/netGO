@@ -21,8 +21,8 @@ library(devtools) # load devtools to use ‘install_github’ function
 install_github('unistbig/netGO') # install netGO
 library(netGO) # load netGO
 PrepareExampleData() # Download and load example datasets contatining brca, genesets, PPI and genesetV
-obj = netGO(genes = brca[1:20], genesets = genesets, network = PPI, genesetV = genesetV) # run netGO
-netGOVis(obj = obj, genes = brca[1:20], genesets = genesets, R = 50, network = PPI) # Visualize the result
+obj = netGO(genes = brca[1:20], genesets = genesets, network = network, genesetV = genesetV) # run netGO
+netGOVis(obj = obj, genes = brca[1:20], genesets = genesets, R = 50, network = network) # Visualize the result
 
 ```
 
