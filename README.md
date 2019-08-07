@@ -11,7 +11,7 @@ netGO is an R/Shiny package for network-integrated pathway enrichment analysis. 
 ```r
 install.packages(c('devtools', 'Rcpp', 'shinyjs', 'DT','doParallel', 'foreach', 'parallel', 'htmlwidgets', 'googleVis', 'V8'))
 library(devtools)
-install_github('unistbig/shinyCyJS')
+install_github('unistbig/shinyCyJS') # R >=3.5.2
 ```
 
 #### Example Run
