@@ -210,7 +210,7 @@ server = function(input,output,session){
   myTab[,2] = as.numeric(myTab[,2])
   myTab[,3] = as.numeric(myTab[,3])
   rownames(myTab) = myTab[,1]
-  colnames(myTab) = c("Gene-set name","netGO\nq-value","Fisher's exact test\nq-value")
+  colnames(myTab) = c("Gene-set name","netGO<br>q-value","Fisher's exact test<br>q-value")
   myTab = myTab[order(myTab[,2]),]
   sGs = genesets[[myTab[1,1]]]
 
@@ -234,13 +234,14 @@ server = function(input,output,session){
       dom = 'ltipr',
       autoWidth = TRUE
       ,columnDefs = list(
-        list(width = '30%', targets = 0),
-        list(width = '10%', targets = 1),
+        list(width ='30%', targets = 0),
+        list(width ='10%', targets = 1),
         list(width ='10%', targets = 2)
       )
 
     ),
-    selection = 'single'
+    selection = 'single',
+    escape = FALSE
     )
   )
 
