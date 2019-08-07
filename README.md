@@ -25,11 +25,10 @@ obj = netGO(genes = brca[1:20], genesets = genesets, network = network, genesetV
 netGOVis(obj = obj, genes = brca[1:20], genesets = genesets, R = 50, network = network) # Visualize the result
 
 ```
-
 ### Main functions
 
 <hr>
-
+ㅏ
 #### 1. netGO
 This function returns a data frame of gene-set p-values derived from netGO and Fisher’s exact test.
 #### Input arguments
