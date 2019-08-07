@@ -154,16 +154,16 @@ ui = function(){
     tags$head(tags$script(src="svg.min.js")),
     tags$link(rel = "stylesheet", type = "text/css", href = "cytoscape.js-panzoom.css"),
     tags$head(tags$script(src="additional_script.js")),
-    tags$head(tags$style('#view{height:50%;margin:1em;margin-top:4em};')),
+    tags$head(tags$style('#view{height:50%;};')), # margin:1em;margin-top:4em
     div(id='create', display='none'), # EMPTY DIV FOR DOWNLOAD SVG
 
     #tags$head(tags$script(src="cytoscape-svg-convertor.js")),
     sidebarLayout(
       position = 'right',
       sidebarPanel(
-        DTOutput(outputId='table1'),
+        DTOutput(outputId='table1',height = '50%'),
         #actionButton(inputId='btn2',label='Plot Gene-set network',style='position:absolute;right:18em;margin-bottom:1em;'),
-        downloadButton(outputId = "btn3", label = "Download Table",style='position:absolute;right:6em;margin-bottom:1em;'),
+        downloadButton(outputId = "btn3", label = "Download Table",style='position:absolute;right:3.6em;margin-top:-8%;'),
         htmlOutput("view"),
 
         width = 6
@@ -232,11 +232,11 @@ server = function(input,output,session){
       scrollY = "30em", # each row takes 40 px
       scroller = TRUE,
       dom = 'ltipr',
-      autoWidth = TRUE,
-      columnDefs = list(
-        list(width = '140px', targets = 1),
-        list(width ='200px', targets = 2)
-      )
+      autoWidth = TRUE
+      #,columnDefs = list(
+        #list(width = '140px', targets = 1),
+        #list(width ='200px', targets = 2)
+      #)
 
     ),
     selection = 'single'
