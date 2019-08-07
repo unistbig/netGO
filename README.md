@@ -37,7 +37,6 @@ This function returns a data frame of gene-set p-values derived from netGO and F
 -	genesets: A list of gene-sets consisting of groups of genes.<br>
 -	network: A numeric matrix of network data. The network score range is [0,1].<br>
 -	genesetV: A numeric matrix of pre-calculated interaction data between gene and gene-sets. The matrix dimension must be [ {# of genes} X {# of gene-sets}]. It can be built using BuildGenesetV function with network and gene-set objects as input arguments.
-<br>
 
 ```r
 genesetV = BuildGenesetV(network, genesets)
