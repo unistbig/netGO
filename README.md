@@ -28,7 +28,7 @@ netGOVis(obj = obj, genes = brca[1:20], genesets = genesets, R = 50, network = n
 ### Main functions
 
 <hr>
-ㅏ
+
 #### 1. netGO
 This function returns a data frame of gene-set p-values derived from netGO and Fisher’s exact test.
 #### Input arguments
