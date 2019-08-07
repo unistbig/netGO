@@ -224,15 +224,20 @@ server = function(input,output,session){
   output$table1 = renderDT(datatable(
     myTab,
     rownames = FALSE,
-    extensions = c('Scroller', 'Buttons') ,
+    extensions = c('Scroller', 'Buttons'),
     options = list(
-      autoWidth = TRUE,
       processing = TRUE,
       order = list(list(1,'asc')),
       deferRender = TRUE,
       scrollY = "30em", # each row takes 40 px
       scroller = TRUE,
-      dom = 'ltipr'
+      dom = 'ltipr',
+      autoWidth = TRUE,
+      columnDefs = list(
+        list(width = '140px', targets = 1),
+        list(width ='200px', targets = 2)
+      )
+
     ),
     selection = 'single'
     )
