@@ -254,6 +254,7 @@ DownloadExampleData = function(){
   filelist = c('networkString.RData', 'brca.RData','brcaresult.RData','c2gs.RData'
                ,'genesetVString1.RData', 'genesetVString2.RData')
   for(i in 1:length(filelist)){
+    print(paste0('Loading ',filelist[i]))
     load(filelist[i], envir = .GlobalEnv)
   }
 

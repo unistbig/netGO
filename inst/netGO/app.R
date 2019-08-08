@@ -3,9 +3,6 @@
 #' @import netGO
 #' @import DT
 
-# Data prepare
-
-
 # netGOVis
 
 library(shiny)
@@ -154,30 +151,28 @@ ui = function(){
     tags$head(tags$script(src="svg.min.js")),
     tags$link(rel = "stylesheet", type = "text/css", href = "cytoscape.js-panzoom.css"),
     tags$head(tags$script(src="additional_script.js")),
-    tags$head(tags$style('.dataTables_scrollHeadInner{width:100%;};')), # margin:1em;margin-top:4em
 
-    tags$head(tags$style('#view{height:45%;left:5%;bottom:5%;position:absolute;width:90%; text-align:center};')), # margin:1em;margin-top:4em
+    tags$head(tags$style('.dataTables_scrollHeadInner{width:100%;};')),
+
     div(id='create', display='none'), # EMPTY DIV FOR DOWNLOAD SVG
 
-    #tags$head(tags$script(src="cytoscape-svg-convertor.js")),
     sidebarLayout(
       position = 'right',
       sidebarPanel(
         downloadButton(outputId = "btn3", label = "Download Table",style='position:absolute;right:3.6em;'),
         div(
-          DTOutput(outputId='table1',height = '25%', width ='100%'),
-          style='height:30%; position:absolute;top:6%;width:90%;'),
-        #actionButton(inputId='btn2',label='Plot Gene-set network',style='position:absolute;right:18em;margin-bottom:1em;'),
-
-        htmlOutput("view"),
+          DTOutput(outputId='table1',height = '100%', width ='100%' ),
+          style = 'height:40%; margin-top:3em;'
+          ),
+        span(
+          htmlOutput("view", inline = TRUE),
+          style = 'height:40%;left:5%;bottom:5%;position:absolute;width:90%; text-align:center'
+        ),
 
         width = 6
       ),
       mainPanel(
-        #actionButton(
-        #inputId = 'btn',label = 'Export',
-        #style = 'position:absolute;top:1em;right:1em; z-index:9999;'
-        #),
+
         ShinyCyJSOutput(outputId = 'cy', height = '95%'),
         actionButton(
           inputId = 'btn4',
@@ -204,12 +199,9 @@ buildelement = function(genes, sGs){
 }
 
 server = function(input,output,session){
-  # build example network
 
   si = sigIdx(obj,R = R,Q = Q)
-
   myTab = cbind(names(si),round(cbind(p.adjust(obj$netGOP,'fdr'),p.adjust(obj$FisherP,'fdr'))[si,],4))
-
   myTab = data.frame(myTab, stringsAsFactors = FALSE)
 
   myTab[,2] = as.numeric(myTab[,2])
@@ -230,25 +222,25 @@ server = function(input,output,session){
     datatable(
     myTab,
     rownames = FALSE,
-    extensions = c('Scroller', 'Buttons'),#,'Responsive'),
+    extensions = c('Scroller', 'Buttons'),
     options = list(
       processing = TRUE,
       order = list(list(1,'asc')),
       deferRender = TRUE,
-      scrollY = "20vh",
+      scrollY = "34vh",
       scroller = TRUE,
       scrollX = TRUE,
-      dom = 'ltipr'
-      ,autoWidth = TRUE
-      ,columnDefs = list(
-        list(width ='75%', targets = 0),
-        list(width ='150px', targets = c(1,2))
-        #list(width ='200px', targets = 2)
+      dom = 'ltipr',
+      autoWidth = TRUE,
+      columnDefs = list(
+        list(width ='100px', targets = c(1)),
+        list(width ='150px', targets = c(2)),
+        list(width ='50%', targets = 0)
       )
     ),
     selection = 'single',
     escape = FALSE
-    )#,server = FALSE
+    )
   )
 
   myData = data.frame(
@@ -267,7 +259,7 @@ server = function(input,output,session){
       myData,idvar = 'name',xvar = 'overlap',
       yvar = 'network', colorvar = 'significant',sizevar ='pvalue_log10',
       options = list(
-        width = '100%', height = '100%',
+        width = '100%', height = '95%',
         chartArea = "{left:'5%',top:'5%',width:'80%',height:'80%'}",
         # netGO Hyper Both
         # Red #ff7675 Blue #74b9ff Purple #a29bfe
