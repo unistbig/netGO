@@ -2,9 +2,9 @@
 R/Shiny package for network-integrated pathway enrichment analysis
 
 ### Introduction
-netGO is an R/Shiny package for network-integrated pathway enrichment analysis. It provides gene-set enrichment analysis results evaluated from netGO and simple Fisher’s exact test. It also provides visualization to let the users easily compare the results derived from two methods. The R/Shiny package is available at Github ( https://github.com/unistbig/netGO ). Currently, netGO provides network and gene-set data of four species including human, mouse, yeast and arabidopsis. Such accessory data are available at another repository (https://github.com/unistbig/netGO-Data/)
+netGO is an R-Shiny package for network-integrated pathway enrichment analysis. It also provides the conventional Fisher’s exact test. Specifically, it provides user-interactive visualization of enrichment analysis results and related networks. The netGO package is available at Github (https://github.com/unistbig/netGO). Currently, netGO provides network and annotation gene-set data for four species including human, mouse, yeast, and Arabidopsis thaliana. These data are all available from another repository (https://github.com/unistbig/netGO-Data/)
 
-### Install and Launch
+### Install and Example codes
 #### * Prerequisites : Please install following R packages
 - devtool, Rcpp, shiny, shinyjs, DT, doParallel, foreach, parallel, htmlwidgets, googleVis, V8, shinyCyJS
 
@@ -25,7 +25,6 @@ obj = netGO(genes = brca[1:20], genesets = genesets, network = network, genesetV
 netGOVis(obj = obj, genes = brca[1:20], genesets = genesets, R = 50, network = network) # Visualize the result
 
 ```
-
 ### Main functions
 
 <hr>
@@ -38,7 +37,6 @@ This function returns a data frame of gene-set p-values derived from netGO and F
 -	genesets: A list of gene-sets consisting of groups of genes.<br>
 -	network: A numeric matrix of network data. The network score range is [0,1].<br>
 -	genesetV: A numeric matrix of pre-calculated interaction data between gene and gene-sets. The matrix dimension must be [ {# of genes} X {# of gene-sets}]. It can be built using BuildGenesetV function with network and gene-set objects as input arguments.
-<br>
 
 ```r
 genesetV = BuildGenesetV(network, genesets)
