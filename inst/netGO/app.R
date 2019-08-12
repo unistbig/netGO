@@ -248,8 +248,8 @@ server = function(input,output,session){
 
   myData = data.frame(
     name = names(si),
-    network = unname(sapply(si, function(i){sum(network[intersect(rownames(network),genes),intersect(rownames(network), genesets[[i]])])/ length(genesets[[i]]) })),
-    overlap = unname(sapply(si, function(i){length(intersect(genes,genesets[[i]]))/ length(genesets[[i]])})),
+    network = unname(sapply(names(si), function(i){sum(network[intersect(rownames(network),genes),intersect(rownames(network), genesets[[i]])])/ length(genesets[[i]]) })),
+    overlap = unname(sapply(names(si), function(i){length(intersect(genes,genesets[[i]]))/ length(genesets[[i]])})),
     pvalue_log10 = sapply(names(si), function(i){ as.numeric(-log10(as.numeric(myTab[i,2]) )) }),
     significant = buildCol(obj, R = R, Q = Q)[si]
   )
