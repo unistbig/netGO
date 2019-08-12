@@ -181,7 +181,10 @@ ui = function(){
           style='position:absolute; z-index:9999;right:1em;top:2.5em;'
         ),
         span(textOutput(outputId = 'txt1'), style='font-weight: bold;position: absolute;z-index: 9999;left: 10%;top: 0.5em;'),
-        span(tags$img(src = 'legend.png', style='width:20em'), style ='position: absolute;bottom: 1em;z-index: 9999;'),
+        span(
+          tags$img(src = 'legend.png', style='width:20em'), style ='position: absolute;bottom: 1em;z-index: 9999;',
+          span('×',onclick="this.parentNode.style.display = 'none';",style='cursor:pointer;width:1em;height:1em; position:absolute; top:1px;right:1px;')
+        ),
         width = 6
       )
     )
