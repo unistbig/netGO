@@ -245,17 +245,17 @@ server = function(input,output,session){
     escape = FALSE
     )
   )
+  # network value
 
   myData = data.frame(
     name = names(si),
-    network = unname(sapply(names(si), function(i){sum(network[intersect(rownames(network),genes),intersect(rownames(network), genesets[[i]])])/ length(genesets[[i]]) })),
-    overlap = unname(sapply(names(si), function(i){length(intersect(genes,genesets[[i]]))/ length(genesets[[i]])})),
-    pvalue_log10 = sapply(names(si), function(i){ as.numeric(-log10(as.numeric(myTab[i,2]) )) }),
+    overlap = unname(sapply(names(si), function(i){ obj[which(obj[,1]==i),4]})),
+    network = unname(sapply(names(si), function(i){ obj[which(obj[,1]==i),5]})),
+    pvalue_log10 = sapply(names(si), function(i){ as.numeric(-log10(as.numeric(obj[which(obj[,1]==i),2]) )) }),
     significant = buildCol(obj, R = R, Q = Q)[si]
   )
 
   myData = myData[order(myData[,'significant'], decreasing = TRUE),]
-
 
   output$view = renderGvis({
     gvisBubbleChart(

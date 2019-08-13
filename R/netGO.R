@@ -113,9 +113,20 @@ pMM2 = function(genes, genesets, genesI, genesetV, RS, alpha){
   OVL = sapply(1:L(genesets), function(i){L(INT(genes, genesets[[i]]))})
   NET = sapply(1:L(genesets), function(i){
     # sum(genesetV[genesI,i]) / sqrt(  (sum(RS[genesI]) * length(genesets[[i]]) ) )
-    sum(genesetV[genesI,i]) / (sum(RS[genesI])^(alpha) / (length(genesets[[i]]))^(1-alpha))
+    sum(genesetV[genesI,i]) / (sum(RS[genesI])^(alpha) * (length(genesets[[i]]))^(1-alpha))
     })
   1-(OVL+NET)/L(genes)
+}
+
+#' @export
+getValues = function(genes, genesets, genesI, genesetV, RS, alpha){
+  OVL = sapply(1:L(genesets), function(i){L(INT(genes, genesets[[i]]))})
+  NET = sapply(1:L(genesets), function(i){
+    sum(genesetV[genesI,i]) / (sum(RS[genesI])^(alpha) * (length(genesets[[i]]))^(1-alpha))
+  })
+  OVL = OVL/L(genes)
+  NET = NET/L(genes)
+  list(OVL = OVL, NET = NET)
 }
 
 #' @export
@@ -159,7 +170,8 @@ getPvalue = function(genes, genesets, network, genesetV, alpha, nperm ){
 
   pv = (pv+1)/(nperm+1)
   names(pv) = names(genesets)
-  return(pv)
+  values = getValues(genes, genesets, genesI, genesetV, RS, alpha)
+  return(list(pv = pv, values = values))
 }
 
 #' @export
@@ -197,10 +209,14 @@ netGO = function(genes, genesets, network, genesetV, nperm = 10000, alpha = 0.5)
   require(doParallel)
 
   pvh = getHyperPvalue(genes, genesets)
-  pv = getPvalue(genes, genesets, network, genesetV, alpha, nperm)
+  obj = getPvalue(genes, genesets, network, genesetV, alpha, nperm)
+  pv = obj$pv
+  values = obj$values
+
   ret = data.frame(pv,pvh)
   ret = cbind(rownames(ret),ret)
-  colnames(ret) = c('gene-set','netGOP','FisherP')
+  ret = cbind(ret, values$OVL, values$NET)
+  colnames(ret) = c('gene-set','netGOP','FisherP', 'OVL', 'NET')
   rownames(ret) = NULL
   ret = ret[order(ret$netGOP),]
   return(ret)
