@@ -236,9 +236,9 @@ server = function(input,output,session){
       dom = 'ltipr',
       autoWidth = TRUE,
       columnDefs = list(
-        list(width ='100px', targets = c(1)),
-        list(width ='150px', targets = c(2)),
-        list(width ='50%', targets = 0)
+        list(width ='100px', targets = 1),
+        list(width ='150px', targets = 2),
+        list(width ='100%', targets = 0)
       )
     ),
     selection = 'single',
