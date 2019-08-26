@@ -249,8 +249,8 @@ server = function(input,output,session){
 
   myData = data.frame(
     name = names(si),
-    overlap = unname(sapply(names(si), function(i){ obj[which(obj[,1]==i),4]})),
-    network = unname(sapply(names(si), function(i){ obj[which(obj[,1]==i),5]})),
+    overlap = unname(sapply(names(si), function(i){ obj[which(obj[,1]==i),6]})),
+    network = unname(sapply(names(si), function(i){ obj[which(obj[,1]==i),7]})),
     pvalue_log10 = sapply(names(si), function(i){ as.numeric(-log10(as.numeric(obj[which(obj[,1]==i),2]) )) }),
     significant = buildCol(obj, R = R, Q = Q)[si]
   )

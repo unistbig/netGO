@@ -109,29 +109,28 @@ pMM = function(genes, genesI, genesets, genesetsI, LGS, network ){
 }
 
 #' @export
-pMM2 = function(genes, genesets, genesI, genesetV, RS, alpha){
+pMM2 = function(genes, genesets, genesI, genesetV, RS, alpha, beta ){
   OVL = sapply(1:L(genesets), function(i){L(INT(genes, genesets[[i]]))})
   NET = sapply(1:L(genesets), function(i){
-    # sum(genesetV[genesI,i]) / sqrt(  (sum(RS[genesI]) * length(genesets[[i]]) ) )
-    sum(genesetV[genesI,i]) / (sum(RS[genesI])^(alpha) * (length(genesets[[i]]))^(1-alpha))
-    })
+    sum(genesetV[genesI,i]) / ( sum(RS[genesI])^(1-beta) * (length(genesets[[i]]))^(beta) )
+    }) * alpha
   1-(OVL+NET)/L(genes)
 }
 
 #' @export
-getValues = function(genes, genesets, genesI, genesetV, RS, alpha){
+getValues = function(genes, genesets, genesI, genesetV, RS, alpha, beta ){
   OVL = sapply(1:L(genesets), function(i){L(INT(genes, genesets[[i]]))})
   NET = sapply(1:L(genesets), function(i){
-    sum(genesetV[genesI,i]) / (sum(RS[genesI])^(alpha) * (length(genesets[[i]]))^(1-alpha))
+    sum(genesetV[genesI,i]) / (sum(RS[genesI])^(1-beta) * (length(genesets[[i]]))^(beta))
   })
   OVL = OVL/L(genes)
-  NET = NET/L(genes)
+  NET = alpha*NET/L(genes)
   list(OVL = OVL, NET = NET)
 }
 
 #' @export
-getPvalue = function(genes, genesets, network, genesetV, alpha, nperm ){
-
+getPvalue = function(genes, genesets, network, genesetV, alpha, beta, nperm ){
+  additional = FALSE
   LGS = sapply(1:L(genesets), function(i){length(genesets[[i]])})
 
   RS = sapply(1:nrow(network), function(i){sum(network[,i])})
@@ -145,32 +144,86 @@ getPvalue = function(genes, genesets, network, genesetV, alpha, nperm ){
   sim2 = function(){
     sampled = Resample(SamplenetworkLV, networkLV)
     sampledI = IndexGenes(sampled,rn)
-    as.numeric(pMM2(sampled, genesets, sampledI, genesetV, RS, alpha) <= od)
+    as.numeric(pMM2(sampled, genesets, sampledI, genesetV, RS, alpha, beta) <= od)
   }
-  genesI = IndexGenes(genes,rownames(network)) # 0
 
-  #genesetsI = BuildGenesetsI(rownames(network), genesets) # 30 second
+  genesI = IndexGenes(genes,rownames(network))
 
-  networkLV = getnetwork(network) # 13 second
+  networkLV = getnetwork(network)
 
-  # od = pMM(genes, genesI, genesets, genesetsI, LGS, network) # 0.1 second
-  od = pMM2(genes, genesets, genesI, genesetV, RS, alpha)
+  od = pMM2(genes, genesets, genesI, genesetV, RS, alpha, beta)
 
-  SamplenetworkLV = GetSamplenetworkLV(genes, networkLV) # 0 second
+  SamplenetworkLV = GetSamplenetworkLV(genes, networkLV)
 
   numCores = parallel::detectCores()
   cl = parallel::makeCluster(numCores-1)
   on.exit(parallel::stopCluster(cl))
   doParallel::registerDoParallel(cl)
   rn = rownames(network)
-  # ~ 1 second
-  #pv = foreach( i=1:REP, .inorder = FALSE, .combine = '+', .verbose = TRUE ) %dopar% { sim() }
-  pv = foreach(i = 1:nperm, .inorder = FALSE, .combine = '+', .noexport = 'network') %dopar% {sim2()}
-  #pv = Reduce(`+`,pv)
 
-  pv = (pv+1)/(nperm+1)
+  if(nperm>50000){
+    print('nperm > 50000')
+    pv = foreach(i = 1:(nperm/10), .inorder = FALSE, .combine = '+', .noexport = 'network') %dopar% {sim2()}
+    for(i in 1:9){
+      pv = pv + foreach(i = 1:(nperm/10), .inorder = FALSE, .combine = '+', .noexport = 'network') %dopar% {sim2()}
+    }
+  }
+  else{
+    pv = foreach(i = 1:nperm, .inorder = FALSE, .combine = '+', .noexport = 'network') %dopar% {sim2()}
+  }
+
   names(pv) = names(genesets)
-  values = getValues(genes, genesets, genesI, genesetV, RS, alpha)
+
+  nperms = rep(nperm,length(genesets))
+  names(nperms) = names(pv)
+
+  pv = (pv+1)/(nperms+1)
+
+  # more permutation with higher ranks
+  if(additional){
+    R = rank(pv, ties.method = 'min')
+    higher = c()
+    for(i in 1:80){
+      A = names(which(R==i))
+      if(length(A)>1){
+        higher = c(higher, A)
+      }
+      if(length(higher)>80){break}
+    }
+
+    sim3 = function(){
+      sampled = Resample(SamplenetworkLV, networkLV)
+      sampledI = IndexGenes(sampled,rn)
+      as.numeric(pMM2(sampled, genesets[higher], sampledI, genesetV, RS, alpha, beta) <= od2)
+    }
+    v = 0
+
+    if(length(higher)>80){
+      print('Additional permutation')
+      while(length(higher)>80 & v<10){
+        v = v+1
+        pv = pv*(nperms+1)-1
+        cat('.')
+        od2 = pMM2(genes, genesets[higher], genesI, genesetV, RS, alpha, beta)
+
+        additional_pv = foreach(i = 1:nperm, .inorder = FALSE, .combine = '+', .noexport = 'network') %dopar% {sim3()}
+        nperms[higher] = nperms[higher] + nperm
+
+        pv[higher] = pv[higher] + additional_pv
+        pv = (pv+1)/(nperms+1)
+
+        R = rank(pv, ties.method = 'min')
+        higher = c()
+        for(i in 1:80){
+          A = which(R==i)
+          if(length(A)>1){ higher = c(higher, A) }
+          if(length(higher)>80){break}
+        }
+      }
+    }
+  }
+
+  values = getValues(genes, genesets, genesI, genesetV, RS, alpha, beta)
   return(list(pv = pv, values = values))
 }
 
@@ -202,21 +255,21 @@ BuildGenesetV = function(network, genesets){
 }
 
 #' @export
-netGO = function(genes, genesets, network, genesetV, nperm = 10000, alpha = 0.5){
+netGO = function(genes, genesets, network, genesetV, alpha = 20, beta = 0.5, nperm = 10000){
 
   require(foreach)
   require(parallel)
   require(doParallel)
 
   pvh = getHyperPvalue(genes, genesets)
-  obj = getPvalue(genes, genesets, network, genesetV, alpha, nperm)
+  obj = getPvalue(genes, genesets, network, genesetV, alpha, beta, nperm)
   pv = obj$pv
   values = obj$values
 
-  ret = data.frame(pv,pvh)
+  ret = data.frame(pv,pvh, p.adjust(pv,'fdr'), p.adjust(pvh,'fdr'))
   ret = cbind(rownames(ret),ret)
   ret = cbind(ret, values$OVL, values$NET)
-  colnames(ret) = c('gene-set','netGOP','FisherP', 'OVL', 'NET')
+  colnames(ret) = c('gene-set','netGOP','FisherP','netGOFDR','FisherFDR', 'overlap_score', 'network_score')
   rownames(ret) = NULL
   ret = ret[order(ret$netGOP),]
   return(ret)
@@ -225,10 +278,7 @@ netGO = function(genes, genesets, network, genesetV, nperm = 10000, alpha = 0.5)
 #' @export
 netGOVis = function(obj, genes, genesets, network, R = 50, Q = NULL){
   suppressPackageStartupMessages('')
-  # arg1 -> inst/FOLDERNAME ( GScluster )
-  # arg2 -> ...?
   require(shinyCyJS)
-  # code to run netGOVis
   appDir = system.file("netGO", package = 'netGO')
   if(appDir ==''){
     stop(
@@ -244,14 +294,9 @@ netGOVis = function(obj, genes, genesets, network, R = 50, Q = NULL){
   .GlobalEnv$.Q = Q
   .GlobalEnv$.R = R
 
-  on.exit(rm(list=c('.obj', '.genes', '.network','.genesets','.R','.Q'),
-             envir=.GlobalEnv))
+  on.exit(rm(list=c('.obj', '.genes', '.network','.genesets','.R','.Q'),envir=.GlobalEnv))
 
-  shiny::runApp(
-    appDir,
-    launch.browser = TRUE,
-    display.mode ='normal'
-  )
+  shiny::runApp(appDir,launch.browser = TRUE,display.mode ='normal')
 }
 
 #' @export
