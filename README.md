@@ -41,7 +41,10 @@ This function returns a data frame of gene-set p-values derived from netGO and F
 ```r
 genesetV = BuildGenesetV(network, genesets)
 ```
--	alpha (optional): A numeric parameter reflecting the influence of the network data (e.g., PPI network). The value is between 0~1 and default is 0.5.<br>
+-	alpha (optional): A numeric parameter weights how much network score will be effected (See (1) in the
+main text). The value is positive numeric value with > 1 and the default is 20.<br>
+-beta (optional): A numeric parameter balancing the weights between the relative and absolute network
+scores (See (1) in the main text). The value is between 0 and 1 and the default is 0.5.<br>
 -	nperm: The number of permutations.<br>
 
 **Notice** that, member of genes should be gene symbols when using the default STRING and mSigDB data. Other types of gene names are also available if the corresponding customized data (network and gene-set data) are used.
