@@ -43,7 +43,7 @@ genesetV = BuildGenesetV(network, genesets)
 ```
 -	alpha (optional): A numeric parameter weights how much network score will be effected (See (1) in the
 main text). The value is positive numeric value with > 1 and the default is 20.<br>
--beta (optional): A numeric parameter balancing the weights between the relative and absolute network
+- beta (optional): A numeric parameter balancing the weights between the relative and absolute network
 scores (See (1) in the main text). The value is between 0 and 1 and the default is 0.5.<br>
 -	nperm: The number of permutations.<br>
 
