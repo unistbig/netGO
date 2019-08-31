@@ -26,8 +26,8 @@ netGOVis(obj = obj, genes = brca[1:20], genesets = genesets, R = 50, network = n
 
 ```
 
-This example run may takes around 10 min in Desktop, and 15 ~ 25 min in Laptop 
-( not including Download example data )
+This example run takes around 10 min on Desktop, and 15 - 25 min on Laptop 
+( not including downloading data )
 
 ### Main functions
 
