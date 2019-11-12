@@ -1,13 +1,19 @@
 Package: netGO
 Title: Gene-Set Analysis and Visualize with Network information
-Version: 0.0.1.4
+Version: 0.0.1.5
 Authors@R: person("Jinhwan", "Kim", email = "kjh0530@unist.ac.kr", role = c("aut", "cre"))
 Description: netGO.
-Depends: R (>= 3.5.2),
+Depends: R (>= 3.5.2)
 Imports:
-  foreach,
-  doParallel,
-  parallel
+  doParallel (>= 1.0.15),
+  DT (>= 0.9),
+  foreach (>= 1.4.7),
+  googleVis (>= 0.6.4),
+  htmlwidgets (>= 1.5.1),
+  parallel (>= 3.6.1),
+  shiny (>= 1.4.0),
+  shinyCyJS (>= 0.0.8),
+  shinyjs (>= 1.0)
 License: MIT + File license
 Encoding: UTF-8
 LazyData: true
