@@ -1,6 +1,3 @@
-library(foreach)
-library(parallel)
-library(doParallel)
 library(shinyCyJS)
 
 #' @export
@@ -199,6 +196,9 @@ getValues <- function(genes, genesets, genesI, genesetV, RS, alpha, beta) {
 getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm) {
   require(foreach)
   require(doSNOW)
+  require(parallel)
+  require(doParallel)
+
   additional <- FALSE
   LGS <- sapply(1:L(genesets), function(i) {
     length(genesets[[i]])
