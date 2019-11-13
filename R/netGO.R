@@ -195,8 +195,8 @@ getValues <- function(genes, genesets, genesI, genesetV, RS, alpha, beta) {
 #' @export
 getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm) {
   require(foreach)
-  require(doSNOW)
-  require(parallel)
+  #require(doSNOW)
+  #require(parallel)
   require(doParallel)
 
   additional <- FALSE
@@ -244,21 +244,21 @@ getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm) {
 
   if (nperm > 50000) {
     print("nperm > 50000")
-    pv <- foreach(i = 1:(nperm / 10), .inorder = FALSE, .combine = "+", .noexport = "network", .options.snow = opts) %dopar% {
+    pv <- foreach::foreach(i = 1:(nperm / 10), .inorder = FALSE, .combine = "+", .noexport = "network", .options.snow = opts) %dopar% {
       cnt <- cnt + 1
       setTxtProgressBar(pb, cnt)
       return(sim2())
     }
     for (i in 1:9) {
-      pv <- pv + foreach(i = 1:(nperm / 10), .inorder = FALSE, .combine = "+", .noexport = "network", .options.snow = opts) %dopar% {
+      pv <- pv + foreach::foreach(i = 1:(nperm / 10), .inorder = FALSE, .combine = "+", .noexport = "network", .options.snow = opts) %dopar% {
         cnt <- cnt + 1
         setTxtProgressBar(pb, cnt)
-        sim2()
+        return(sim2())
       }
     }
   }
   else {
-    pv <- foreach(i = 1:nperm, .inorder = FALSE, .combine = "+", .noexport = "network", .options.snow = opts) %dopar% {
+    pv <- foreach::foreach(i = 1:nperm, .inorder = FALSE, .combine = "+", .noexport = "network", .options.snow = opts) %dopar% {
 
       cnt <- cnt + 1
       setTxtProgressBar(pb, cnt)
