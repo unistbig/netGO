@@ -198,7 +198,7 @@ getValues <- function(genes, genesets, genesI, genesetV, RS, alpha, beta) {
 #' @export
 getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm) {
   require(foreach)
-
+  require(doSNOW)
   additional <- FALSE
   LGS <- sapply(1:L(genesets), function(i) {
     length(genesets[[i]])
@@ -229,35 +229,45 @@ getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm) {
   SamplenetworkLV <- GetSamplenetworkLV(genes, networkLV)
   print("Parallel function loads")
   numCores <- parallel::detectCores()
-  cl <- parallel::makePSOCKcluster(numCores - 1, outfile = '')
+  cl <- parallel::makeCluster(numCores - 1)
+
   on.exit(parallel::stopCluster(cl))
-  doParallel::registerDoParallel(cl)
-  pb <- txtProgressBar(min=1, max=100, style=3)
+  doSNOW::registerDoSNOW(cl)
+  cnt = 0
+  pb <- txtProgressBar(min = 0, max = nperm, width = 100)
+  progress <- function(n) setTxtProgressBar(pb,n)
+  opts <- list(progress = progress)
+
   rn <- rownames(network)
   print('Calculation start')
-  print('this may takes a time')
-  cnt = 0
+  print('Progress - each = mean 1%')
+
   if (nperm > 50000) {
     print("nperm > 50000")
-    pv <- foreach(i = 1:(nperm / 10), .inorder = FALSE, .combine = "+", .noexport = "network") %dopar% {
-      sim2()
+    pv <- foreach(i = 1:(nperm / 10), .inorder = FALSE, .combine = "+", .noexport = "network", .options.snow = opts) %dopar% {
       cnt <- cnt + 1
       setTxtProgressBar(pb, cnt)
+      return(sim2())
     }
     for (i in 1:9) {
-      pv <- pv + foreach(i = 1:(nperm / 10), .inorder = FALSE, .combine = "+", .noexport = "network") %dopar% {
-        sim2()
+      pv <- pv + foreach(i = 1:(nperm / 10), .inorder = FALSE, .combine = "+", .noexport = "network", .options.snow = opts) %dopar% {
         cnt <- cnt + 1
         setTxtProgressBar(pb, cnt)
+        sim2()
       }
     }
   }
   else {
-    pv <- foreach(i = 1:nperm, .inorder = FALSE, .combine = "+", .noexport = "network") %dopar% {
-      sim2()
+    pv <- foreach(i = 1:nperm, .inorder = FALSE, .combine = "+", .noexport = "network", .options.snow = opts) %dopar% {
+
+      cnt <- cnt + 1
+      setTxtProgressBar(pb, cnt)
+      return(sim2())
     }
   }
+  close(pb)
   print('Calculation finished')
+
   names(pv) <- names(genesets)
 
   nperms <- rep(nperm, length(genesets))
@@ -411,14 +421,12 @@ DownloadExampleData <- function() {
     }
   }
   filelist <- c(
-    "networkString.RData", "brca.RData", "brcaresult.RData", "c2gs.RData",
-    "genesetVString1.RData", "genesetVString2.RData"
-  )
+    "networkString.RData", "brca.RData", "brcaresult.RData", "c2gs.RData","genesetVString1.RData", "genesetVString2.RData")
   for (i in 1:length(filelist)) {
     print(paste0("Loading ", filelist[i]))
     load(filelist[i], envir = .GlobalEnv)
   }
   genesetV <- rbind(genesetV1, genesetV2)
-  rm(genesetV1,genesetV2)
+  rm(genesetV1,genesetV2, envir = .GlobalEnv)
   assign("genesetV", genesetV, envir = .GlobalEnv)
 }
