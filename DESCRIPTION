@@ -3,8 +3,8 @@ Title: Gene-Set Analysis and Visualize with Network information
 Version: 0.0.1.6
 Authors@R: person("Jinhwan", "Kim", email = "kjh0530@unist.ac.kr", role = c("aut", "cre"))
 Description: netGO.
-Depends: R (>= 3.4.1)
-Imports:
+Depends: 
+  R (>= 3.4.1),
   doParallel (>= 1.0.15),
   doSNOW (>= 1.0.18),
   DT (>= 0.9),
@@ -14,7 +14,8 @@ Imports:
   parallel (>= 3.6.1),
   shiny (>= 1.4.0),
   shinyCyJS (>= 0.0.8),
-  shinyjs (>= 1.0)
+  shinyjs (>= 1.0),
+  V8 (>= 2.3)
 License: MIT + File license
 Encoding: UTF-8
 LazyData: true

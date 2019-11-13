@@ -1,5 +1,3 @@
-library(shinyCyJS)
-
 #' @export
 getHyperPvalue <- function(genes, genesets) {
   A <- length(unique(unlist(genesets)))
@@ -194,17 +192,11 @@ getValues <- function(genes, genesets, genesI, genesetV, RS, alpha, beta) {
 
 #' @export
 getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm) {
-  library(parallel)
 
   numCores <- parallel::detectCores()
   cl <- parallel::makeCluster(numCores - 1)
 
   on.exit(parallel::stopCluster(cl))
-
-
-  library(foreach)
-  library(doSNOW)
-  library(doParallel)
 
   additional <- FALSE
   LGS <- sapply(1:L(genesets), function(i) {
