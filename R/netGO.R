@@ -194,9 +194,16 @@ getValues <- function(genes, genesets, genesI, genesetV, RS, alpha, beta) {
 
 #' @export
 getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm) {
+  library(parallel)
+
+  numCores <- parallel::detectCores()
+  cl <- parallel::makeCluster(numCores - 1)
+
+  on.exit(parallel::stopCluster(cl))
+
+
   library(foreach)
   library(doSNOW)
-  library(parallel)
   library(doParallel)
 
   additional <- FALSE
@@ -227,11 +234,8 @@ getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm) {
   od <- pMM2(genes, genesets, genesI, genesetV, RS, alpha, beta)
 
   SamplenetworkLV <- GetSamplenetworkLV(genes, networkLV)
-  print("Parallel function loads")
-  numCores <- parallel::detectCores()
-  cl <- parallel::makeCluster(numCores - 1)
 
-  on.exit(parallel::stopCluster(cl))
+  print("Parallel function loads")
   doSNOW::registerDoSNOW(cl)
   cnt = 0
   pb <- txtProgressBar(min = 0, max = nperm, width = 100)
