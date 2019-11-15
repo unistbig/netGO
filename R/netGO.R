@@ -1,3 +1,54 @@
+library(foreach)
+library(parallel)
+library(doParallel)
+library(shinyCyJS)
+
+#' @export
+exportTable = function(type){
+
+  si <- sigIdx(obj, R = R, Q = Q)
+  myTab <- cbind(names(si), round(cbind(p.adjust(obj$netGOP, "fdr"), p.adjust(obj$FisherP, "fdr"))[si, ], 4))
+  myTab <- data.frame(myTab, stringsAsFactors = FALSE)
+
+  myTab[, 2] <- as.numeric(myTab[, 2])
+  myTab[, 3] <- as.numeric(myTab[, 3])
+  rownames(myTab) <- myTab[, 1]
+  colnames(myTab) <- c("Gene-set name", "netGO q-value", "Fisher's exact test q-value")
+
+  myTab <- myTab[order(myTab[, 2]), ]
+  D = myTab
+  if(type=="D"){
+    colnames(myTab) <- c("Gene-set name", "netGO<br>q-value", "Fisher's exact test<br>q-value")
+    D = datatable(
+      myTab,
+      rownames = FALSE,
+      extensions = c("Scroller", "Buttons"),
+      options = list(
+        processing = TRUE,
+        order = list(list(1, "asc")),
+        deferRender = TRUE,
+        scrollY = "34vh",
+        scroller = TRUE,
+        scrollX = TRUE,
+        dom = "ltipr",
+        autoWidth = TRUE,
+        columnDefs = list(
+          list(width = "100px", targets = 1),
+          list(width = "150px", targets = 2),
+          list(width = "100%", targets = 0)
+        )
+      ),
+      selection = "single",
+      escape = FALSE
+    )
+  }
+
+  return(D)
+}
+
+
+
+
 #' @export
 getHyperPvalue <- function(genes, genesets) {
   A <- length(unique(unlist(genesets)))
@@ -192,12 +243,6 @@ getValues <- function(genes, genesets, genesI, genesetV, RS, alpha, beta) {
 
 #' @export
 getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm) {
-
-  numCores <- parallel::detectCores()
-  cl <- parallel::makeCluster(numCores - 1)
-
-  on.exit(parallel::stopCluster(cl))
-
   additional <- FALSE
   LGS <- sapply(1:L(genesets), function(i) {
     length(genesets[[i]])
@@ -226,44 +271,31 @@ getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm) {
   od <- pMM2(genes, genesets, genesI, genesetV, RS, alpha, beta)
 
   SamplenetworkLV <- GetSamplenetworkLV(genes, networkLV)
-
   print("Parallel function loads")
-  doSNOW::registerDoSNOW(cl)
-  cnt = 0
-  pb <- txtProgressBar(min = 0, max = nperm, width = 100)
-  progress <- function(n) setTxtProgressBar(pb,n)
-  opts <- list(progress = progress)
-
+  numCores <- parallel::detectCores()
+  cl <- parallel::makeCluster(numCores - 1)
+  on.exit(parallel::stopCluster(cl))
+  doParallel::registerDoParallel(cl)
   rn <- rownames(network)
   print('Calculation start')
-  print('Progress - each = mean 1%')
-
+  print('this may takes a time')
   if (nperm > 50000) {
     print("nperm > 50000")
-    pv <- foreach::foreach(i = 1:(nperm / 10), .inorder = FALSE, .combine = "+", .noexport = "network", .options.snow = opts) %dopar% {
-      cnt <- cnt + 1
-      setTxtProgressBar(pb, cnt)
-      return(sim2())
+    pv <- foreach(i = 1:(nperm / 10), .inorder = FALSE, .combine = "+", .noexport = "network") %dopar% {
+      sim2()
     }
     for (i in 1:9) {
-      pv <- pv + foreach::foreach(i = 1:(nperm / 10), .inorder = FALSE, .combine = "+", .noexport = "network", .options.snow = opts) %dopar% {
-        cnt <- cnt + 1
-        setTxtProgressBar(pb, cnt)
-        return(sim2())
+      pv <- pv + foreach(i = 1:(nperm / 10), .inorder = FALSE, .combine = "+", .noexport = "network") %dopar% {
+        sim2()
       }
     }
   }
   else {
-    pv <- foreach::foreach(i = 1:nperm, .inorder = FALSE, .combine = "+", .noexport = "network", .options.snow = opts) %dopar% {
-
-      cnt <- cnt + 1
-      setTxtProgressBar(pb, cnt)
-      return(sim2())
+    pv <- foreach(i = 1:nperm, .inorder = FALSE, .combine = "+", .noexport = "network") %dopar% {
+      sim2()
     }
   }
-  close(pb)
   print('Calculation finished')
-
   names(pv) <- names(genesets)
 
   nperms <- rep(nperm, length(genesets))
@@ -417,12 +449,97 @@ DownloadExampleData <- function() {
     }
   }
   filelist <- c(
-    "networkString.RData", "brca.RData", "brcaresult.RData", "c2gs.RData","genesetVString1.RData", "genesetVString2.RData")
+    "networkString.RData", "brca.RData", "brcaresult.RData", "c2gs.RData",
+    "genesetVString1.RData", "genesetVString2.RData"
+  )
   for (i in 1:length(filelist)) {
     print(paste0("Loading ", filelist[i]))
     load(filelist[i], envir = .GlobalEnv)
   }
+
   genesetV <- rbind(genesetV1, genesetV2)
-  rm(genesetV1,genesetV2, envir = .GlobalEnv)
   assign("genesetV", genesetV, envir = .GlobalEnv)
 }
+
+
+exportGraph <- function(genes, sGs) {
+  res = list()
+  isobj <- getIntersectPart(genes, sGs)
+
+  if(length(setdiff(genes,sGs))){
+    res[[length(res)+1]] =
+      buildElems(
+        data.frame(
+          id = setdiff(genes, sGs),
+          bgColor = "#FFFFFF",
+          borderColor = "#48DBFB",
+          borderWidth = 2,
+          fontSize = 10,
+          width = 60, height = 20, opacity = 1, stringsAsFactors = FALSE
+        ), 'Node')
+  }
+
+  if(length(intersect(genes, sGs))){
+    res[[length(res)+1]] =
+      buildElems(
+        data.frame(
+          id = intersect(genes, sGs),
+          bgColor = "#FFFFFF",
+          borderColor = "#03CB5D",
+          borderWidth = 2,
+          fontSize = 10,
+          width = 60, height = 20, opacity = 1, stringsAsFactors = FALSE
+        ), 'Node')
+  }
+
+  if(nrow(isobj$res)){
+
+    res[[length(res)+1]] = buildElems(data.frame(
+      id = isobj$nodes,
+      bgColor = "#FFFFFF",
+      borderColor = "#FCCE00",
+      borderWidth = 2,
+      fontSize = 10,
+      width = 60, height = 20, opacity = 1, stringsAsFactors = FALSE
+    ), "Node")
+
+    res[[length(res)+1]] = buildElems(isobj$res, "Edge")
+  }
+  return(c(res[[1]], res[[2]] ,res[[3]], res[[4]]) )
+}
+
+getIntersectPart <- function(gene, geneset) {
+  elements <- list()
+  gs <- intersect(geneset, rownames(network))
+  g <- intersect(gene, rownames(network))
+
+  edges <- list()
+
+  res <- data.frame(source = "", target = "", width = "", lineColor = "", opacity = "", stringsAsFactors = FALSE)
+  for (i in 1:length(g)) {
+    E <- network[g[i], names(which(network[g[i], gs] > 0))]
+    if (length(E)) {
+      if (length(E) == 1) {
+        n <- names(which(network[g[i], gs] > 0))
+        res <- rbind(
+          res,
+          data.frame(
+            source = g[i],
+            target = n, width = (E + .5) * 3, lineColor = "#4B4B4B", opacity = 1
+          )
+        )
+        next
+      }
+      res <- rbind(
+        res,
+        data.frame(source = g[i], target = names(E), width = (unname(E) + .5) * 3, lineColor = "#4B4B4B", opacity = 1)
+      )
+    }
+  }
+  res <- res[-1, ]
+  nodes <- union(res[, 1], res[, 2])
+  return(list(res = res, nodes = nodes))
+}
+
+
+# shinyCyJS(exportGraph(brca[1:20], genesets[[1139]]))
