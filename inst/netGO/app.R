@@ -204,6 +204,8 @@ ui <- function() {
   )
 }
 
+
+
 buildelement <- function(genes, sGs) {
   elements <- list()
   elements <- append(elements, buildIG(setdiff(genes, sGs)), after = length(elements))
