@@ -587,5 +587,33 @@ getIntersectPart <- function(gene, geneset) {
   return(list(res = res, nodes = nodes))
 }
 
+#' @export
+exportGraphTxt <- function(gene, geneset) {
+  rn <- rownames(network)
+  g <- intersect(gene, rn)
+  gs <- intersect(geneset, rn)
 
-# shinyCyJS(exportGraph(brca[1:20], genesets[[1139]]))
+  res <- data.frame(geneA = "", geneB = "", strength = "", stringsAsFactors = FALSE)
+  for (i in 1:length(g)) {
+    E <- network[g[i], names(which(network[g[i], gs] > 0))]
+    if (length(E)) {
+      if (length(E) == 1) {
+        n <- names(which(network[g[i], gs] > 0))
+        res <- rbind(res, data.frame(geneA = g[i], geneB = n, strength = E, stringsAsFactors = FALSE))
+        next
+      }
+      res <- rbind(res, data.frame(geneA = g[i], geneB = names(E), strength = unname(E), stringsAsFactors = FALSE))
+    }
+  }
+
+  res <- res[-1, ]
+
+  type <- rep("Inter", nrow(res))
+  for (i in 1:nrow(res)) {
+    if (res[i, 1] %in% g && res[i, 2] %in% g) {
+      type[i] <- "Inner"
+    }
+  }
+  res <- cbind(res, type)
+  return(res)
+}
