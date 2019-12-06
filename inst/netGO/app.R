@@ -41,11 +41,11 @@ nodetojs <- function(genes) {
 }
 
 sigIdx <- function(obj, R, Q) {
-  pv <- obj$netGOP
-  pvh <- obj$FisherP
-  names(pv) <- names(pvh) <- obj[, 1]
+  pv <- obj$`netGO+Q`
+  pvh <- obj$FisherQ
+  names(pv) <- names(pvh) <- obj$`gene-set`
   if (!is.null(Q)) {
-    idx <- which(p.adjust(pv, "fdr") <= Q | p.adjust(pvh, "fdr") <= Q)
+    idx <- which(pv <= Q | pvh <= Q)
     return(idx)
   }
   else {
@@ -57,17 +57,17 @@ sigIdx <- function(obj, R, Q) {
 
 buildCol <- function(obj, R, Q) {
   if (!is.null(Q)) {
-    A <- unname(which(p.adjust(obj$netGOP, "fdr") <= Q))
-    B <- unname(which(p.adjust(obj$FisherP, "fdr") <= Q))
+    A <- unname(which(obj$`netGO+Q` <= Q))
+    B <- unname(which(obj$FisherQ <= Q))
   }
   else {
-    A <- unname(which(rank(obj$netGOP, ties.method = "first") <= R))
-    B <- unname(which(rank(obj$FisherP, ties.method = "first") <= R))
+    A <- unname(which(rank(obj$`netGO+Q`, ties.method = "first") <= R))
+    B <- unname(which(rank(obj$FisherQ, ties.method = "first") <= R))
   }
   C <- intersect(A, B)
-  res <- rep("NONE", length(obj$netGOP))
+  res <- rep("NONE", length(obj$`netGO+Q`))
   if (length(A)) {
-    res[A] <- "netGO"
+    res[A] <- "netGO+"
   }
   if (length(B)) {
     res[B] <- "Fisher"
@@ -204,8 +204,6 @@ ui <- function() {
   )
 }
 
-
-
 buildelement <- function(genes, sGs) {
   elements <- list()
   elements <- append(elements, buildIG(setdiff(genes, sGs)), after = length(elements))
@@ -218,14 +216,15 @@ buildelement <- function(genes, sGs) {
 
 server <- function(input, output, session) {
   si <- sigIdx(obj, R = R, Q = Q)
-  myTab <- cbind(names(si), round(cbind(p.adjust(obj$netGOP, "fdr"), p.adjust(obj$FisherP, "fdr"))[si, ], 4))
+  myTab <- cbind(names(si), round(cbind(obj$`netGO+Q`, obj$`netGOQ`, obj$FisherQ)[si, ], 4))
   myTab <- data.frame(myTab, stringsAsFactors = FALSE)
 
-  myTab[, 2] <- as.numeric(myTab[, 2])
-  myTab[, 3] <- as.numeric(myTab[, 3])
+  myTab[, 2] <- as.numeric(myTab[, 2]) # netGO+ Q value
+  myTab[, 3] <- as.numeric(myTab[, 3]) # netGO Q value
+  myTab[, 4] <- as.numeric(myTab[, 4]) # Fisher Q value
   rownames(myTab) <- myTab[, 1]
-  colnames(myTab) <- c("Gene-set name", "netGO<br>q-value", "Fisher's exact test<br>q-value")
-  myTab <- myTab[order(myTab[, 2]), ]
+  colnames(myTab) <- c("Gene-set name", "netGO+<br>q-value", "netGO<br>q-value", "Fisher's exact test<br>q-value")
+  myTab <- myTab[order(myTab[, 2]), ] # sort by netGO+
   sGs <- genesets[[myTab[1, 1]]]
 
   elements <- buildelement(genes, sGs)
@@ -264,13 +263,13 @@ server <- function(input, output, session) {
   myData <- data.frame(
     name = names(si),
     overlap = unname(sapply(names(si), function(i) {
-      obj[which(obj[, 1] == i), 6]
+      obj$OverlapScore[which(obj$`gene-set` == i)]
     })),
     network = unname(sapply(names(si), function(i) {
-      obj[which(obj[, 1] == i), 7]
+      obj$NetworkScore[which(obj$`gene-set` == i)]
     })),
-    pvalue_log10 = sapply(names(si), function(i) {
-      as.numeric(-log10(as.numeric(obj[which(obj[, 1] == i), 2])))
+    qvalue_log10 = sapply(names(si), function(i) {
+      as.numeric(-log10(as.numeric(obj$`netGO+Q`[which(obj$`gene-set` == i)])))
     }),
     significant = buildCol(obj, R = R, Q = Q)[si]
   )
@@ -281,7 +280,7 @@ server <- function(input, output, session) {
     gvisBubbleChart(
       myData,
       idvar = "name", xvar = "overlap",
-      yvar = "network", colorvar = "significant", sizevar = "pvalue_log10",
+      yvar = "network", colorvar = "significant", sizevar = "qvalue_log10",
       options = list(
         width = "100%", height = "95%",
         chartArea = "{left:'5%',top:'5%',width:'80%',height:'80%'}",
@@ -346,7 +345,7 @@ server <- function(input, output, session) {
       g <- sapply(1:nrow(myTab), function(i) {
         paste0(sort(g[[i]]), collapse = ",")
       })
-      text <- c("Gene-set\tSize\tnetGO-Qvalue\tFisher-Qvalue\tGenes")
+      text <- c("Gene-set\tSize\tnetGO+-Qvalue\tFisher-Qvalue\tGenes")
       for (i in 1:(length(set))) {
         text[i + 1] <- paste(set[i], size[i], pv1[i], pv2[i], g[[i]], sep = "\t")
       }

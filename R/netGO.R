@@ -3,9 +3,6 @@ library(parallel)
 library(doParallel)
 library(shinyCyJS)
 
-
-
-
 #' @export
 getHyperPvalue <- function(genes, genesets) {
   A <- length(unique(unlist(genesets)))
@@ -35,47 +32,17 @@ GetSamplenetworkLV <- function(genes, networkLV) {
 }
 
 #' @export
-Resample <- function(SamplenetworkLV, networkLV) {
+Resample <- function(SamplenetworkLV, networkLV, category) {
+  uns <- unique(names(SamplenetworkLV))
   res <- c()
-  if (!is.na(SamplenetworkLV["0"])) {
-    res <- c(res, sample(which(networkLV == "0"), size = SamplenetworkLV["0"]))
-  } # NA
-  if (!is.na(SamplenetworkLV["1"])) {
-    res <- c(res, sample(which(networkLV == "1"), size = SamplenetworkLV["1"]))
-  } # 1Q
-  if (!is.na(SamplenetworkLV["2"])) {
-    res <- c(res, sample(which(networkLV == "2"), size = SamplenetworkLV["2"]))
-  } # 2Q
-  if (!is.na(SamplenetworkLV["3"])) {
-    res <- c(res, sample(which(networkLV == "3"), size = SamplenetworkLV["3"]))
-  } # 3Q
-  if (!is.na(SamplenetworkLV["4"])) {
-    res <- c(res, sample(which(networkLV == "4"), size = SamplenetworkLV["4"]))
-  } # 4Q
-  # 10 Group added
-  if (!is.na(SamplenetworkLV["5"])) {
-    res <- c(res, sample(which(networkLV == "5"), size = SamplenetworkLV["5"]))
-  } # 4Q
-  if (!is.na(SamplenetworkLV["6"])) {
-    res <- c(res, sample(which(networkLV == "6"), size = SamplenetworkLV["6"]))
-  } # 4Q
-  if (!is.na(SamplenetworkLV["7"])) {
-    res <- c(res, sample(which(networkLV == "7"), size = SamplenetworkLV["7"]))
-  } # 4Q
-  if (!is.na(SamplenetworkLV["8"])) {
-    res <- c(res, sample(which(networkLV == "8"), size = SamplenetworkLV["8"]))
-  } # 4Q
-  if (!is.na(SamplenetworkLV["9"])) {
-    res <- c(res, sample(which(networkLV == "9"), size = SamplenetworkLV["9"]))
-  } # 4Q
-  if (!is.na(SamplenetworkLV["10"])) {
-    res <- c(res, sample(which(networkLV == "10"), size = SamplenetworkLV["10"]))
-  } # 4Q
+  for (i in 1:length(uns)) {
+    res <- c(res, sample(which(networkLV == uns[i]), size = SamplenetworkLV[uns[i]]))
+  }
   return(names(res))
 }
 
 #' @export
-getnetwork <- function(network) {
+getnetwork <- function(network, category) {
   networkSum <- sapply(1:nrow(network), function(i) {
     sum(network[i, ], na.rm = T)
   })
@@ -84,40 +51,19 @@ getnetwork <- function(network) {
 
   names(networkSum) <- rn
   res <- rep(0, length(rn))
-
+  category <- category - 1
   # 10 Group
-  v <- unname(quantile(networkSum, probs = seq(0, 1, 1 / 9)))
+  v <- unname(quantile(networkSum, probs = seq(0, 1, 1 / category)))
   for (i in 1:length(rn)) {
     a <- unname(networkSum[rn[i]])
     if (is.na(a)) {
       res[i] <- 0
-    }
-    else if (a <= v[2]) {
-      res[i] <- 1
-    }
-    else if (a <= v[3]) {
-      res[i] <- 2
-    }
-    else if (a <= v[4]) {
-      res[i] <- 3
-    }
-    else if (a <= v[5]) {
-      res[i] <- 4
-    }
-    else if (a <= v[6]) {
-      res[i] <- 5
-    }
-    else if (a <= v[7]) {
-      res[i] <- 6
-    }
-    else if (a <= v[8]) {
-      res[i] <- 7
-    }
-    else if (a <= v[9]) {
-      res[i] <- 8
-    }
-    else if (a <= v[10]) {
-      res[i] <- 9
+    } else {
+      for (j in (category + 1):2) {
+        if (a <= v[j]) {
+          res[i] <- j - 1
+        }
+      }
     }
   }
 
@@ -147,42 +93,24 @@ L <- function(A) {
 UNI <- function(A, B) {
   union(A, B)
 }
-
 #' @export
-pMM <- function(genes, genesI, genesets, genesetsI, LGS, network) {
-  ALPHA <- 1
-  P <- function(A, B) {
-    sum(network[A, B])
-  }
-
-  OVL <- sapply(1:L(genesets), function(i) {
-    L(INT(genesets[[i]], genes))
-  }) / L(genes)
-
+pMM <- function(genes, genesets, genesI, genesetV, RS, beta) { # for netGO (network only)
   NET <- sapply(1:L(genesets), function(i) {
-    g <- L(genes)
-    A <- genesI
-    B <- genesetsI[[i]]
-    D <- DIF(A, B)
-
-    w <- LGS[i] / (g + LGS[i] - g * OVL[i])
-    v <- (P(D, B) + (w - 1) * P(D, INT(A, B))) / (LGS[i] + (1 - w) * g * OVL[i])
-
-    v
+    sum(genesetV[genesI, i]) / (sum(RS[genesI])^(1 - beta) * (length(genesets[[i]]))^(beta))
   })
-
-  return(1 - (OVL + ALPHA * NET))
+  1 - NET / L(genes) # netGO
 }
 
 #' @export
-pMM2 <- function(genes, genesets, genesI, genesetV, RS, alpha, beta) {
+pMM2 <- function(genes, genesets, genesI, genesetV, RS, alpha, beta) { # for netGO+ (overlap + network)
   OVL <- sapply(1:L(genesets), function(i) {
     L(INT(genes, genesets[[i]]))
   })
+
   NET <- sapply(1:L(genesets), function(i) {
     sum(genesetV[genesI, i]) / (sum(RS[genesI])^(1 - beta) * (length(genesets[[i]]))^(beta))
-  }) * alpha
-  1 - (OVL + NET) / L(genes)
+  })
+  1 - (OVL + NET*alpha) / L(genes) # netGO Plus
 }
 
 #' @export
@@ -199,7 +127,7 @@ getValues <- function(genes, genesets, genesI, genesetV, RS, alpha, beta) {
 }
 
 #' @export
-getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm) {
+getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm, category) {
   numCores <- parallel::detectCores()
   cl <- parallel::makeCluster(numCores - 1)
   on.exit(parallel::stopCluster(cl))
@@ -211,40 +139,29 @@ getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm) {
     sum(network[, i])
   })
   names(RS) <- rownames(network)
-  sim <- function() {
-    sampled <- Resample(SamplenetworkLV, networkLV)
-    sampledI <- IndexGenes(sampled, rownames(network))
-    as.numeric(pMM(
-      sampled, sampledI, genesets, genesetsI,
-      LGS, network
-    ) <= od)
-  }
-  sim2 <- function() {
-    sampled <- Resample(SamplenetworkLV, networkLV)
-    sampledI <- IndexGenes(sampled, rn)
-    as.numeric(pMM2(
-      sampled, genesets, sampledI, genesetV,
-      RS, alpha, beta
-    ) <= od)
-  }
   genesI <- IndexGenes(genes, rownames(network))
-  networkLV <- getnetwork(network)
-  od <- pMM2(
-    genes, genesets, genesI, genesetV, RS, alpha,
-    beta
-  )
+  networkLV <- getnetwork(network, category)
   SamplenetworkLV <- GetSamplenetworkLV(genes, networkLV)
-  print("Parallel function loads")
+
+  cat("Parallel function loads\n")
   doSNOW::registerDoSNOW(cl)
-  cnt <- 0
-  pb <- txtProgressBar(min = 0, max = nperm, width = 100)
+  pb <- txtProgressBar(min = 0, max = nperm, width = 20)
   progress <- function(n) setTxtProgressBar(pb, n)
   opts <- list(progress = progress)
   rn <- rownames(network)
-  print("Calculation start")
-  print("Progress - each = mean 1%")
+
+  # sim, od, pMM, pv -> netGO
+  sim <- function() {
+    sampled <- Resample(SamplenetworkLV, networkLV, category)
+    sampledI <- IndexGenes(sampled, rn)
+    pMM(sampled, genesets, sampledI, genesetV, RS, beta) <= od
+  }
+  od = pMM(genes, genesets,genesI,genesetV,RS,beta)
+  cnt = 0
+  cat("netGO Calculation start\n")
+  cat("Progress - each = means 5%\n")
   if (nperm > 50000) {
-    print("nperm > 50000")
+    cat("nperm > 50000")
     pv <- foreach::foreach(
       i = 1:(nperm / 10), .inorder = FALSE,
       .combine = "+", .noexport = "network",
@@ -274,17 +191,69 @@ getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm) {
     ) %dopar% {
       cnt <- cnt + 1
       setTxtProgressBar(pb, cnt)
+      return(sim())
+    }
+  }
+  cat('\n')
+  cat("netGO Calculation finished\n")
+
+  # sim2, od2, pMM2, pv2 -> netGO+
+  sim2 <- function() {
+    sampled <- Resample(SamplenetworkLV, networkLV, category)
+    sampledI <- IndexGenes(sampled, rn)
+    pMM2(sampled, genesets, sampledI, genesetV, RS, alpha, beta) <= od2
+  }
+  od2 <- pMM2(genes, genesets, genesI, genesetV, RS, alpha, beta)
+  cnt <- 0
+  cat("netGO+ Calculation start\n")
+  cat("Progress - each = means 5%\n")
+  if (nperm > 50000) {
+    cat("nperm > 50000")
+    pv <- foreach::foreach(
+      i = 1:(nperm / 10), .inorder = FALSE,
+      .combine = "+", .noexport = "network",
+      .options.snow = opts
+    ) %dopar% {
+      cnt <- cnt + 1
+      setTxtProgressBar(pb, cnt)
+      return(sim2())
+    }
+    for (i in 1:9) {
+      pv <- pv + foreach::foreach(
+        i = 1:(nperm / 10), .inorder = FALSE,
+        .combine = "+", .noexport = "network",
+        .options.snow = opts
+      ) %dopar% {
+        cnt <- cnt + 1
+        setTxtProgressBar(pb, cnt)
+        return(sim2())
+      }
+    }
+  }
+  else {
+    pv2 <- foreach::foreach(
+      i = 1:nperm, .inorder = FALSE,
+      .combine = "+", .noexport = "network",
+      .options.snow = opts
+    ) %dopar% {
+      cnt <- cnt + 1
+      setTxtProgressBar(pb, cnt)
       return(sim2())
     }
   }
   close(pb)
-  print("Calculation finished")
-  names(pv) <- names(genesets)
+
+  names(pv) = names(genesets)
+  names(pv2) <- names(genesets)
   nperms <- rep(nperm, length(genesets))
-  names(nperms) <- names(pv)
-  pv <- (pv + 1) / (nperms + 1)
+  names(nperms) <- names(pv2)
+  pv = (pv + 1) / (nperms + 1)
+  pv2 <- (pv2 + 1) / (nperms + 1)
+  #cat('\n')
+  cat("netGO+ Calculation finished\n")
+
   if (additional) {
-    print("Additional calculation start")
+    cat("Additional calculation start")
     R <- rank(pv, ties.method = "min")
     higher <- c()
     for (i in 1:80) {
@@ -297,7 +266,7 @@ getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm) {
       }
     }
     sim3 <- function() {
-      sampled <- Resample(SamplenetworkLV, networkLV)
+      sampled <- Resample(SamplenetworkLV, networkLV, category)
       sampledI <- IndexGenes(sampled, rn)
       as.numeric(pMM2(
         sampled, genesets[higher], sampledI,
@@ -306,7 +275,7 @@ getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm) {
     }
     v <- 0
     if (length(higher) > 80) {
-      print("Additional permutation")
+      cat("Additional permutation")
       while (length(higher) > 80 & v < 10) {
         v <- v + 1
         pv <- pv * (nperms + 1) - 1
@@ -338,11 +307,8 @@ getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm) {
       }
     }
   }
-  values <- getValues(
-    genes, genesets, genesI, genesetV, RS,
-    alpha, beta
-  )
-  return(list(pv = pv, values = values))
+  values <- getValues(genes, genesets, genesI, genesetV, RS, alpha, beta)
+  return(list(pv = pv, pv2 = pv2, values = values))
 }
 
 #' @export
@@ -379,18 +345,23 @@ BuildGenesetV <- function(network, genesets) {
 }
 
 #' @export
-netGO <- function(genes, genesets, network, genesetV, alpha = 20, beta = 0.5, nperm = 10000) {
+netGO <- function(genes, genesets, network, genesetV, alpha = 20, beta = 0.5, nperm = 10000, category = NULL) {
   pvh <- getHyperPvalue(genes, genesets)
-  obj <- getPvalue(genes, genesets, network, genesetV, alpha, beta, nperm)
-  pv <- obj$pv
+  if (is.null(category)) {
+    category <- ceiling(nrow(genesetV) / 2000) # category is set with 2000 genes per group
+  }
+  obj <- getPvalue(genes, genesets, network, genesetV, alpha, beta, nperm, category)
+  pv <- p.adjust(obj$pv,'fdr') # netGO
+  pv2 <- p.adjust(obj$pv2,'fdr') # netGO+
+  pvh <- p.adjust(pvh,'fdr')
   values <- obj$values
 
-  ret <- data.frame(pv, pvh, p.adjust(pv, "fdr"), p.adjust(pvh, "fdr"))
+  ret <- data.frame(pv, pv2, pvh)
   ret <- cbind(rownames(ret), ret)
   ret <- cbind(ret, values$OVL, values$NET)
-  colnames(ret) <- c("gene-set", "netGOP", "FisherP", "netGOFDR", "FisherFDR", "overlap_score", "network_score")
+  colnames(ret) <- c("gene-set", "netGOQ","netGO+Q","FisherQ", "OverlapScore", "NetworkScore")
   rownames(ret) <- NULL
-  ret <- ret[order(ret$netGOP), ]
+  ret <- ret[order(ret[,3]), ] # set order as netGO+ Pvalue
   return(ret)
 }
 
@@ -439,7 +410,7 @@ DownloadExampleData <- function() {
   )
 
   for (i in 1:length(filelist)) {
-    print(paste0("Loading ", filelist[i]))
+    cat(paste0("Loading ", filelist[i], "\n"))
     load(filelist[i], envir = .GlobalEnv)
   }
 
