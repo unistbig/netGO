@@ -109,6 +109,7 @@ getIntersect <- function(gene, geneset) {
 
 fit <- function(genes, sGs) {
   if (length(intersect(genes, sGs))) {
+    sGs = intersect(sGs, rownames(network))
     runjs(
       paste0(
         "setTimeout(function(){", nodetojs(genes),
@@ -206,10 +207,10 @@ ui <- function() {
 
 buildelement <- function(genes, sGs) {
   elements <- list()
-  elements <- append(elements, buildIG(setdiff(genes, sGs)), after = length(elements))
-  elements <- append(elements, buildIG(intersect(sGs, genes), "#03CB5D"), after = length(elements))
+  elements <- append(elements, buildIG(setdiff(genes, sGs)), after = length(elements)) # sky nodes
+  elements <- append(elements, buildIG(intersect(sGs, genes), "#03CB5D"), after = length(elements)) # green nodes
   isobj <- getIntersect(genes, sGs)
-  elements <- append(elements, buildIG(isobj$nwe, "#FCCE00"), after = length(elements))
+  elements <- append(elements, buildIG(isobj$nwe, "#FCCE00"), after = length(elements)) # yellow nodes
   elements <- append(elements, isobj$elements, after = length(elements))
   elements
 }
