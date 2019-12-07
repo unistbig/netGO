@@ -366,7 +366,7 @@ netGO <- function(genes, genesets, network, genesetV, alpha = 20, beta = 0.5, np
 }
 
 #' @export
-netGOVis <- function(obj, genes, genesets, network, R = 50, Q = NULL) {
+netGOVis <- function(obj, genes, genesets, network, R = NULL, Q = 0.25) {
   suppressPackageStartupMessages("")
 
   appDir <- system.file("netGO", package = "netGO")
