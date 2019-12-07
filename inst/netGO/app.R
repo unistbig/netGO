@@ -50,8 +50,8 @@ sigIdx <- function(obj, R, Q) {
   }
   if (!is.null(R)) {
     idx2 <- which(rank(pv, ties.method = "first") <= R | rank(pvh, ties.method = "first") <= R)
+    idx = intersect(idx, idx2)
   }
-  idx = intersect(idx, idx2)
   return(idx)
 }
 
