@@ -40,6 +40,8 @@ netGOVis(obj, genes = brca[1:20], genesets, network) # visualize netGO's result
 ```
 This example run takes around 10 min on Desktop, and 15 - 25 min on Laptop ( not including downloading data )<br>
 
+<img src ='https://user-images.githubusercontent.com/6457691/70370939-f5f68880-190f-11ea-9615-b11fb789fd0e.png'></img>
+
 ### Main functions
 <hr>
 
