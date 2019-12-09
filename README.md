@@ -1,78 +1,139 @@
-# netGO
+# netGO User's Manual
 <img src = 'https://user-images.githubusercontent.com/6457691/70369320-d30da980-18fa-11ea-9b9e-d3eaf7400a4e.png'></img>
-
+ @ 2019-12-09
 
 ### Introduction
+
 netGO is an R/Shiny package for network-integrated pathway enrichment analysis.<br>
-It also provides the conventional Fisher’s exact test.<br> 
+It also provides the conventional Fisher’s exact test.<br>
 Specifically, it provides user-interactive visualization of enrichment analysis results and related networks.<br>
-Currently, netGO provides network and annotation gene-set data for 4 species<br> 
-Including Human, Mouse, Yeast, and Arabidopsis.<br> 
-These data are available from this repository [netGO-Data](https://github.com/unistbig/netGO-Data/)<br>
+Currently, netGO provides network and annotation gene-set data for 4 species<br>
+Including Human, Mouse, Yeast, and Arabidopsis.<br>
+These data are available from this repository [netGO-Data](https://github.com/unistbig/netGO-Data) 
+<br>
 
-### Install and Example codes
 
-#### Package Dependency : Please install following R packages before use netGO
-- devtools, doParallel, doSNOW, DT, foreach, googleVis, htmlwidgets, parallel, shiny, shinyCyJS, shinyJS, V8
+### Install and Example Run
+<details>  
+  <summary> 
+    <b>Install Package</b>
+  </summary>    
+      
+  - netGO uses other R packages, so please install following R packages before use netGO
+  - devtools, doParallel, doSNOW, DT, foreach, googleVis, htmlwidgets, parallel, shiny, shinyCyJS, shinyJS, V8
+  - User may want to use this codes.
+  
+  ```r
+  install.packages(
+    c('devtools','doParallel','doSNOW','DT','foreach','googleVis','htmlwidgets','parallel','shiny','shinyjs','V8')
+  )
+  library(devtools)
+  install_github('unistbig/shinyCyJS') 
+  ```  
+</details>
 
-```r
-install.packages(
-  c('devtools','doParallel','doSNOW','DT',
-  'foreach','googleVis','htmlwidgets',
-  'parallel','shiny','shinyjs','V8')
-)
-library(devtools)
-install_github('unistbig/shinyCyJS') 
-```
+<details>
+  <summary>
+    <b>Example Run</b>
+  </summary>
+  <br>
 
-#### Example Run
+  We prepared example run with breast tumor dataset from NCBI GEO [GSE3744](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE3744)<br>
 
-```r
-library(devtools) # load devtools to use ‘install_github’ function
-install_github('unistbig/netGO') # install netGO
-library(netGO) # load netGO
-DownloadExampleData() # Download and load example breast tumor datasets
+  ```r  
+  library(netGO) # load netGO
+  DownloadExampleData() # Download and load example breast tumor datasets
+  obj = netGO(genes = brca[1:20], genesets, network, genesetV) # run netGO, this may takes a time.
+  # or you can load pre calculated result using this command 
+  # load("brcaresult.RData")   
+  ```
+  
+  This example run takes around 10 min on Desktop, and 15 - 25 min on Laptop ( not including downloading data )
+  <br>  
+  user can briefly see the netGO's analysis result.
+  
+  ```r
+  head(obj)
+  ```
 
-obj = netGO(genes = brca[1:20], genesets, network, genesetV) # run netGO
-# or you can load pre calculated result using this command 
-# load("brcaresult.RData") 
-netGOVis(obj, genes = brca[1:20], genesets, network) # visualize netGO's result
-```
-This example run takes around 10 min on Desktop, and 15 - 25 min on Laptop ( not including downloading data )<br>
+  <img src ='https://user-images.githubusercontent.com/6457691/70370939-f5f68880-190f-11ea-9615-b11fb789fd0e.png'></img>
 
-<img src ='https://user-images.githubusercontent.com/6457691/70370939-f5f68880-190f-11ea-9615-b11fb789fd0e.png'></img>
+  also user can visualize result with netGOVis function.
+  
+  ```r  
+  netGOVis(obj, genes = brca[1:20], genesets, network) # visualize netGO's result
+  ```
+  
+  <img src = 'https://user-images.githubusercontent.com/6457691/70369561-ee7ab380-18fe-11ea-9dcc-fe03d0ea37f0.png'></img>
+  
+  number after 'listening on' may different
+  
+  <br>  
+  <img src = 'https://user-images.githubusercontent.com/6457691/70369640-09015c80-1900-11ea-9eb3-f825e2cbf511.png'></img>
 
-### Main functions
+
+</details>
+
+### Datas
+<details>
+  <summary>     
+    <b>Example Datasets</b> (https://github.com/unistbig/netGO-Data)    
+  </summary>  
+  <br>  
+  |Species|Data Type|File name|Object Name|
+  |:----:|:----:|:----:|:----:|
+  |Human|Network|human/networkString.Rdata|network|
+  |Human|Network|human/networkHumannet.Rdata|network|  
+  |Human|Gene-set|human/c2gs.Rdata|genesets|
+  |Human|Pre-calculated Interaction data|human/genesetVString1,2.Rdata|genesetV1,2|
+  |Human|Pre-calculated Interaction data|human/genesetVHumannet1,2.Rdata|genesetV1,2|  
+  |Arabidopsis|Network|networkMousenet.Rdata|network|
+  |Arabidopsis|Gene-set|KEGGmouse.Rdata|genesets|
+  |Arabidopsis|Pre-calculated Interaction data|human/AragenesetV.RData.Rdata|genesetV|
+  |Mouse|Network|networkMousenet.Rdata|network|
+  |Mouse|Gene-set|KEGGmouse.Rdata|genesets|
+  |Mouse|Pre-calculated Interaction data|genesetVMousenet.Rdata|genesetV|    
+  |Yeast|Network|networkYeastnet.Rdata|network|
+  |Yeast|Gene-set|KEGGyeast.Rdata|genesets|    
+</details>
+
+<details>
+  <summary>
+    <b>Data Formats</b>
+  </summary>  
+  netGO needs 4 data.
+  -	genes: A character vector of input genes (e.g., DE genes).<br>
+  -	genesets: A list of gene-sets consisting of groups of genes.<br>
+  -	network: A numeric matrix of network data. The network score range is [0,1].<br>
+  -	genesetV: A numeric matrix of pre-calculated interaction data between gene and gene-sets.<br>
+    The matrix dimension must be [ {# of genes} X {# of gene-sets}]. <br>
+    It can be built using BuildGenesetV function with network and gene-set objects as input arguments.
+
+  ```r
+  genesetV = BuildGenesetV(network, genesets)
+  ```  
+</details>
+
+### Functions
 <hr>
 
 #### 1. netGO
-This function returns a data frame of gene-set Q-values derived from netGO+, netGO and Fisher’s exact test.<br>
+This function returns a data frame of Gene-sets, and their Q-values derived from netGO+, netGO and Fisher’s exact test.<br>
+also P-values available as option.
 
 #### Input arguments
 
--	genes: A character vector of input genes (e.g., DE genes).<br>
-
--	genesets: A list of gene-sets consisting of groups of genes.<br>
-
--	network: A numeric matrix of network data. The network score range is [0,1].<br>
-
--	genesetV: A numeric matrix of pre-calculated interaction data between gene and gene-sets.<br>
-The matrix dimension must be [ {# of genes} X {# of gene-sets}]. <br>
-It can be built using BuildGenesetV function with network and gene-set objects as input arguments.
-
-```r
-genesetV = BuildGenesetV(network, genesets)
-```
-
-<img src = 'https://user-images.githubusercontent.com/6457691/70369353-43b4c600-18fb-11ea-8318-f37aaafb9b17.png'></img>
-
--	alpha (optional): A numeric parameter weights how much network score will be effected. <br>
-The value is positive numeric value with > 1 and the default is 20.<br>
-
-- beta (optional): A numeric parameter balancing the weights between the relative and absolute network scores.<br> 
-The value is between 0 and 1 and the default is 0.5.<br>
-
--	nperm: The number of permutations.<br>
+  -	genes: A character vector of input genes (e.g., DE genes).<br>
+  -	genesets: A list of gene-sets consisting of groups of genes.<br>
+  -	network: A numeric matrix of network data. The network score range is [0,1].<br>
+  -	genesetV: A numeric matrix of pre-calculated interaction data between gene and gene-sets.<br>    
+  -	alpha (optional): A numeric parameter weights how much network score will be effected. <br>
+  The value is positive numeric value with > 1 and the default is 20.<br>
+  - beta (optional): A numeric parameter balancing the weights between the relative and absolute network scores.<br> 
+  The value is between 0 and 1 and the default is 0.5.<br>
+  -	nperm(optional): A numeric parameter to tell netGO how many times permutation will be repeated, default is 10000<br>
+  - category(optional): A numeric parameter to decide how gene of networks will be categorized with their distribution, default is NULL. and it will divide ~ 2000 genes to each category.<br>
+  - pvalue(optional): A boolean parameter whether return Q-values only ( FALSE ) or both P-values and Q-values (TRUE)
 
 <img src = 'https://user-images.githubusercontent.com/6457691/70369534-7e6c2d80-18fe-11ea-877e-3aa6c79cd4f1.png'></img>
 
@@ -95,12 +156,6 @@ and additional 5) Overlap and 6) Network scores<br>
 
 -	genes, genesets, network: same as in the ‘netGO’ function.<br>
 <hr>
-
-<img src = 'https://user-images.githubusercontent.com/6457691/70369561-ee7ab380-18fe-11ea-9dcc-fe03d0ea37f0.png'></img>
-
-*number after listening on may different*
-
-<img src = 'https://user-images.githubusercontent.com/6457691/70369640-09015c80-1900-11ea-9eb3-f825e2cbf511.png'></img>
 
 
 Question / Comment / Suggest : kjh0530@unist.ac.kr <br>
