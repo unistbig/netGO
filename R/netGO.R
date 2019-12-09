@@ -345,21 +345,29 @@ BuildGenesetV <- function(network, genesets) {
 }
 
 #' @export
-netGO <- function(genes, genesets, network, genesetV, alpha = 20, beta = 0.5, nperm = 10000, category = NULL) {
+netGO <- function(genes, genesets, network, genesetV, alpha = 20, beta = 0.5, nperm = 10000, category = NULL, pvalue = FALSE) {
   pvh <- getHyperPvalue(genes, genesets)
   if (is.null(category)) {
     category <- ceiling(nrow(genesetV) / 2000) # category is set with 2000 genes per group
   }
   obj <- getPvalue(genes, genesets, network, genesetV, alpha, beta, nperm, category)
-  pv <- p.adjust(obj$pv,'fdr') # netGO
-  pv2 <- p.adjust(obj$pv2,'fdr') # netGO+
-  pvh <- p.adjust(pvh,'fdr')
+  qv <- p.adjust(obj$pv,'fdr') # netGO
+  qv2 <- p.adjust(obj$pv2,'fdr') # netGO+
+  qvh <- p.adjust(pvh,'fdr')
   values <- obj$values
 
-  ret <- data.frame(pv, pv2, pvh)
+  ret <- data.frame(qv, qv2, qvh)
   ret <- cbind(rownames(ret), ret)
+  colnames(ret) <- c("gene-set", "netGOQ","netGO+Q","FisherQ")
+  if(pvalue){
+    tmp = colnames(ret)
+    ret <- cbind(ret, obj$pv, obj$pv2, pvh)
+    colnames(ret) <- c(tmp, "netGOP","netGO+P","FisherP")
+  }
+
+  tmp = colnames(ret)
   ret <- cbind(ret, values$OVL, values$NET)
-  colnames(ret) <- c("gene-set", "netGOQ","netGO+Q","FisherQ", "OverlapScore", "NetworkScore")
+  colnames(ret) <- c(tmp, "OverlapScore", "NetworkScore")
   rownames(ret) <- NULL
   ret <- ret[order(ret[,3]), ] # set order as netGO+ Pvalue
   return(ret)
