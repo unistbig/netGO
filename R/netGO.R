@@ -431,33 +431,35 @@ DownloadExampleData <- function() {
 #' @export
 exportTable <- function(type = "", R = 50, Q = NULL) {
   sigIdx <- function(obj, R, Q) {
-    pv <- obj$netGOP
-    pvh <- obj$FisherP
-    names(pv) <- names(pvh) <- obj[, 1]
+    pv <- obj$`netGO+Q`
+    pv2 <- obj$netGOQ
+    pvh <- obj$FisherQ
+    names(pv) <- names(pvh) <- names(pv2) <- obj$`gene-set`
     if (!is.null(Q)) {
-      idx <- which(p.adjust(pv, "fdr") <= Q | p.adjust(pvh, "fdr") <= Q)
+      idx <- which(pv <= Q | pvh <= Q | pv2 <= Q)
       return(idx)
     }
     else {
-      idx <- which(rank(pv, ties.method = "first") <= R | rank(pvh, ties.method = "first") <= R)
+      idx <- which(rank(pv, ties.method = "first") <= R | rank(pvh, ties.method = "first") <= R | rank(pv2, ties.method = "first") <= R)
     }
 
     return(idx)
   }
 
   si <- sigIdx(obj, R, Q)
-  myTab <- cbind(names(si), round(cbind(p.adjust(obj$netGOP, "fdr"), p.adjust(obj$FisherP, "fdr"))[si, ], 4))
+  myTab <- cbind(names(si), round(cbind(obj$`netGO+Q`, obj$netGOQ, obj$FisherQ)[si, ], 4))
   myTab <- data.frame(myTab, stringsAsFactors = FALSE)
 
   myTab[, 2] <- as.numeric(myTab[, 2])
   myTab[, 3] <- as.numeric(myTab[, 3])
+  myTab[, 3] <- as.numeric(myTab[, 4])
   rownames(myTab) <- myTab[, 1]
-  colnames(myTab) <- c("Gene-set name", "netGO q-value", "Fisher's exact test q-value")
+  colnames(myTab) <- c("Gene-set name", "netGO+ q-value", "netGO q-value", "FET q-value")
 
   myTab <- myTab[order(myTab[, 2]), ]
   D <- myTab
   if (type == "D") {
-    colnames(myTab) <- c("Gene-set name", "netGO<br>q-value", "Fisher's exact test<br>q-value")
+    colnames(myTab) <- c("Gene-set name", "netGO+<br>q-value", "netGO<br> q-value", "FET<br>q-value")
     D <- datatable(
       myTab,
       rownames = FALSE,
@@ -474,6 +476,7 @@ exportTable <- function(type = "", R = 50, Q = NULL) {
         columnDefs = list(
           list(width = "100px", targets = 1),
           list(width = "150px", targets = 2),
+          list(width = "150px", targets = 3),
           list(width = "100%", targets = 0)
         )
       ),
