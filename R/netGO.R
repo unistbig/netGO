@@ -3,7 +3,6 @@ library(parallel)
 library(doParallel)
 library(shinyCyJS)
 
-#' @export
 getHyperPvalue <- function(genes, genesets) {
   A <- length(unique(unlist(genesets)))
   pv <- rep(0, length(genesets))
@@ -19,19 +18,16 @@ getHyperPvalue <- function(genes, genesets) {
   return(pv)
 }
 
-#' @export
 IndexGenes <- function(genes, rn) {
   sort(unlist(sapply(genes, function(i) {
     which(i == rn)
   }, USE.NAMES = F)))
 }
 
-#' @export
 GetSamplenetworkLV <- function(genes, networkLV) {
   table(networkLV[genes])
 }
 
-#' @export
 Resample <- function(SamplenetworkLV, networkLV, category) {
   uns <- unique(names(SamplenetworkLV))
   res <- c()
@@ -41,7 +37,6 @@ Resample <- function(SamplenetworkLV, networkLV, category) {
   return(names(res))
 }
 
-#' @export
 getnetwork <- function(network, category) {
   networkSum <- sapply(1:nrow(network), function(i) {
     sum(network[i, ], na.rm = T)
@@ -72,7 +67,6 @@ getnetwork <- function(network, category) {
   return(networkLV)
 }
 
-#' @export
 BuildGenesetsI <- function(rn, genesets) {
   lapply(genesets, IndexGenes, rn = rn)
 }
@@ -93,7 +87,7 @@ L <- function(A) {
 UNI <- function(A, B) {
   union(A, B)
 }
-#' @export
+
 pMM <- function(genes, genesets, genesI, genesetV, RS, beta) { # for netGO (network only)
   NET <- sapply(1:L(genesets), function(i) {
     sum(genesetV[genesI, i]) / (sum(RS[genesI])^(1 - beta) * (length(genesets[[i]]))^(beta))
@@ -101,7 +95,6 @@ pMM <- function(genes, genesets, genesI, genesetV, RS, beta) { # for netGO (netw
   1 - NET / L(genes) # netGO
 }
 
-#' @export
 pMM2 <- function(genes, genesets, genesI, genesetV, RS, alpha, beta) { # for netGO+ (overlap + network)
   OVL <- sapply(1:L(genesets), function(i) {
     L(INT(genes, genesets[[i]]))
@@ -110,10 +103,9 @@ pMM2 <- function(genes, genesets, genesI, genesetV, RS, alpha, beta) { # for net
   NET <- sapply(1:L(genesets), function(i) {
     sum(genesetV[genesI, i]) / (sum(RS[genesI])^(1 - beta) * (length(genesets[[i]]))^(beta))
   })
-  1 - (OVL + NET*alpha) / L(genes) # netGO Plus
+  1 - (OVL + NET * alpha) / L(genes) # netGO Plus
 }
 
-#' @export
 getValues <- function(genes, genesets, genesI, genesetV, RS, alpha, beta) {
   OVL <- sapply(1:L(genesets), function(i) {
     L(INT(genes, genesets[[i]]))
@@ -126,8 +118,7 @@ getValues <- function(genes, genesets, genesI, genesetV, RS, alpha, beta) {
   list(OVL = OVL, NET = NET)
 }
 
-#' @export
-getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm, category) {
+getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm, category, plus, verbose) {
   numCores <- parallel::detectCores()
   cl <- parallel::makeCluster(numCores - 1)
   on.exit(parallel::stopCluster(cl))
@@ -139,63 +130,90 @@ getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm, ca
     sum(network[, i])
   })
   names(RS) <- rownames(network)
+  if(verbose){
+    cat("Indexing genes\n")
+  }
   genesI <- IndexGenes(genes, rownames(network))
+
+  if(verbose){
+    cat("Build category\n")
+  }
   networkLV <- getnetwork(network, category)
   SamplenetworkLV <- GetSamplenetworkLV(genes, networkLV)
 
-  cat("Parallel function loads\n")
+  if(verbose){
+    cat("Parallel functions load\n")
+  }
+
   doSNOW::registerDoSNOW(cl)
   pb <- txtProgressBar(min = 0, max = nperm, width = 20)
   progress <- function(n) setTxtProgressBar(pb, n)
   opts <- list(progress = progress)
   rn <- rownames(network)
-
-  # sim, od, pMM, pv -> netGO
-  sim <- function() {
-    sampled <- Resample(SamplenetworkLV, networkLV, category)
-    sampledI <- IndexGenes(sampled, rn)
-    pMM(sampled, genesets, sampledI, genesetV, RS, beta) <= od
-  }
-  od = pMM(genes, genesets,genesI,genesetV,RS,beta)
-  cnt = 0
-  cat("netGO Calculation start\n")
-  cat("Progress - each = means 5%\n")
-  if (nperm > 50000) {
-    cat("nperm > 50000")
-    pv <- foreach::foreach(
-      i = 1:(nperm / 10), .inorder = FALSE,
-      .combine = "+", .noexport = "network",
-      .options.snow = opts
-    ) %dopar% {
-      cnt <- cnt + 1
-      setTxtProgressBar(pb, cnt)
-      return(sim2())
+  if (plus) {
+    if(verbose){
+      cat("netGO skipped\n")
     }
-    for (i in 1:9) {
-      pv <- pv + foreach::foreach(
+  } else {
+    # sim, od, pMM, pv -> netGO
+    sim <- function() {
+      sampled <- Resample(SamplenetworkLV, networkLV, category)
+      sampledI <- IndexGenes(sampled, rn)
+      pMM(sampled, genesets, sampledI, genesetV, RS, beta) <= od
+    }
+    od <- pMM(genes, genesets, genesI, genesetV, RS, beta)
+    cnt <- 0
+    if(verbose){
+      cat("netGO Calculation start\n")
+    }
+    cat("\nProgress - each = means 5%\n")
+    if (nperm > 50000) {
+      if(verbose){
+        cat("nperm > 50000, this will take time\n")
+      }
+
+      pv <- foreach::foreach(
         i = 1:(nperm / 10), .inorder = FALSE,
         .combine = "+", .noexport = "network",
         .options.snow = opts
       ) %dopar% {
         cnt <- cnt + 1
         setTxtProgressBar(pb, cnt)
-        return(sim2())
+        return(sim())
+      }
+      for (j in 1:9) {
+        pv <- pv + foreach::foreach(
+          i = 1:(nperm / 10), .inorder = FALSE,
+          .combine = "+", .noexport = "network",
+          .options.snow = opts
+        ) %dopar% {
+          cnt <- cnt + 1
+          setTxtProgressBar(pb, cnt)
+          return(sim())
+        }
       }
     }
-  }
-  else {
-    pv <- foreach::foreach(
-      i = 1:nperm, .inorder = FALSE,
-      .combine = "+", .noexport = "network",
-      .options.snow = opts
-    ) %dopar% {
-      cnt <- cnt + 1
-      setTxtProgressBar(pb, cnt)
-      return(sim())
+    else {
+      pv <- foreach::foreach(
+        i = 1:nperm, .inorder = FALSE,
+        .combine = "+", .noexport = "network",
+        .options.snow = opts
+      ) %dopar% {
+        cnt <- cnt + 1
+        setTxtProgressBar(pb, cnt)
+        return(sim())
+      }
+    }
+
+    names(pv) <- names(genesets)
+    nperms <- rep(nperm, length(genesets))
+    names(nperms) <- names(pv)
+    pv <- (pv + 1) / (nperms + 1)
+    if(verbose){
+      cat("\n")
+      cat("netGO Calculation finished\n")
     }
   }
-  cat('\n')
-  cat("netGO Calculation finished\n")
 
   # sim2, od2, pMM2, pv2 -> netGO+
   sim2 <- function() {
@@ -205,10 +223,12 @@ getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm, ca
   }
   od2 <- pMM2(genes, genesets, genesI, genesetV, RS, alpha, beta)
   cnt <- 0
-  cat("netGO+ Calculation start\n")
-  cat("Progress - each = means 5%\n")
+  if(verbose){
+    cat("netGO+ Calculation start\n")
+  }
+  cat("\nProgress - each = means 5%\n")
   if (nperm > 50000) {
-    cat("nperm > 50000")
+    if(verbose){cat("nperm > 50000, this will take time\n")}
     pv <- foreach::foreach(
       i = 1:(nperm / 10), .inorder = FALSE,
       .combine = "+", .noexport = "network",
@@ -243,17 +263,21 @@ getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm, ca
   }
   close(pb)
 
-  names(pv) = names(genesets)
   names(pv2) <- names(genesets)
   nperms <- rep(nperm, length(genesets))
   names(nperms) <- names(pv2)
-  pv = (pv + 1) / (nperms + 1)
-  pv2 <- (pv2 + 1) / (nperms + 1)
-  #cat('\n')
-  cat("netGO+ Calculation finished\n")
 
+  pv2 <- (pv2 + 1) / (nperms + 1)
+  if(verbose){
+    cat("netGO+ Calculation finished\n")
+  }
+
+  # not use
   if (additional) {
-    cat("Additional calculation start")
+    if(verbose){
+      cat("Additional calculation start")
+    }
+
     R <- rank(pv, ties.method = "min")
     higher <- c()
     for (i in 1:80) {
@@ -307,7 +331,13 @@ getPvalue <- function(genes, genesets, network, genesetV, alpha, beta, nperm, ca
       }
     }
   }
+
   values <- getValues(genes, genesets, genesI, genesetV, RS, alpha, beta)
+
+  if (plus) {
+    return(list(pv2 = pv2, values = values))
+  }
+
   return(list(pv = pv, pv2 = pv2, values = values))
 }
 
@@ -345,31 +375,60 @@ BuildGenesetV <- function(network, genesets) {
 }
 
 #' @export
-netGO <- function(genes, genesets, network, genesetV, alpha = 20, beta = 0.5, nperm = 10000, category = NULL, pvalue = FALSE) {
+netGO <- function(genes, genesets, network, genesetV,
+                  alpha = 20, beta = 0.5, nperm = 10000, category = NULL,
+                  pvalue = TRUE, plus = TRUE, verbose = TRUE) {
+
   pvh <- getHyperPvalue(genes, genesets)
-  if (is.null(category)) {
-    category <- ceiling(nrow(genesetV) / 2000) # category is set with 2000 genes per group
+  if(verbose){
+   cat('Fisher Pvalue Calculation finished\n')
   }
-  obj <- getPvalue(genes, genesets, network, genesetV, alpha, beta, nperm, category)
-  qv <- p.adjust(obj$pv,'fdr') # netGO
-  qv2 <- p.adjust(obj$pv2,'fdr') # netGO+
-  qvh <- p.adjust(pvh,'fdr')
+
+  if(is.null(category)) {
+    category <- 2000
+    if (nrow(genesetV) < 10000) {
+      category <- 1000
+    }
+    if(verbose){ cat(paste0(category,' genes in each category\n') )}
+  }
+  else {
+    category <- ceiling(nrow(genesetV) / category)
+  }
+  obj <- getPvalue(genes, genesets, network, genesetV, alpha, beta, nperm, category, plus, verbose)
+
+  if (plus) { # + only
+    qv2 <- p.adjust(obj$pv2, "fdr") # netGO+
+    qvh <- p.adjust(pvh, "fdr")
+    ret <- data.frame(qv2, qvh)
+    ret <- cbind(rownames(ret), ret)
+    colnames(ret) <- c("gene-set", "netGO+Q", "FisherQ")
+    if (pvalue) {
+      tmp <- colnames(ret)
+      ret <- cbind(ret, obj$pv2, pvh)
+      colnames(ret) <- c(tmp, "netGO+P", "FisherP")
+    }
+  }
+
+  if (!plus) {
+    qv <- p.adjust(obj$pv, "fdr") # netGO
+    qv2 <- p.adjust(obj$pv2, "fdr") # netGO+
+    qvh <- p.adjust(pvh, "fdr")
+    ret <- data.frame(qv, qv2, qvh)
+    ret <- cbind(rownames(ret), ret)
+    colnames(ret) <- c("gene-set", "netGOQ", "netGO+Q", "FisherQ")
+    if (pvalue) {
+      tmp <- colnames(ret)
+      ret <- cbind(ret, obj$pv, obj$pv2, pvh)
+      colnames(ret) <- c(tmp, "netGOP", "netGO+P", "FisherP")
+    }
+  }
+
   values <- obj$values
-
-  ret <- data.frame(qv, qv2, qvh)
-  ret <- cbind(rownames(ret), ret)
-  colnames(ret) <- c("gene-set", "netGOQ","netGO+Q","FisherQ")
-  if(pvalue){
-    tmp = colnames(ret)
-    ret <- cbind(ret, obj$pv, obj$pv2, pvh)
-    colnames(ret) <- c(tmp, "netGOP","netGO+P","FisherP")
-  }
-
-  tmp = colnames(ret)
+  tmp <- colnames(ret)
   ret <- cbind(ret, values$OVL, values$NET)
   colnames(ret) <- c(tmp, "OverlapScore", "NetworkScore")
   rownames(ret) <- NULL
-  ret <- ret[order(ret[,3]), ] # set order as netGO+ Pvalue
+  ret <- ret[order(ret$`netGO+Q`), ] # set order as netGO+ Qvalue
   return(ret)
 }
 
@@ -489,15 +548,15 @@ exportTable <- function(type = "", R = 50, Q = NULL) {
 }
 
 #' @export
-exportGraph <- function(genes, sGs) {
+exportGraph <- function(genes, geneset) {
   res <- list()
-  isobj <- getIntersectPart(genes, sGs)
+  isobj <- getIntersectPart(genes, geneset)
 
-  if (length(setdiff(genes, sGs))) {
+  if (length(setdiff(genes, geneset))) {
     res[[length(res) + 1]] <-
       buildElems(
         data.frame(
-          id = setdiff(genes, sGs),
+          id = setdiff(genes, geneset),
           bgColor = "#FFFFFF",
           borderColor = "#48DBFB",
           borderWidth = 2,
@@ -507,11 +566,11 @@ exportGraph <- function(genes, sGs) {
       )
   }
 
-  if (length(intersect(genes, sGs))) {
+  if (length(intersect(genes, geneset))) {
     res[[length(res) + 1]] <-
       buildElems(
         data.frame(
-          id = intersect(genes, sGs),
+          id = intersect(genes, geneset),
           bgColor = "#FFFFFF",
           borderColor = "#03CB5D",
           borderWidth = 2,
