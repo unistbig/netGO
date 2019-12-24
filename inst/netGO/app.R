@@ -287,9 +287,9 @@ server <- function(input, output, session) {
         dom = "ltipr",
         autoWidth = TRUE,
         columnDefs = list(
-          list(width = "60px", targets = 1),
-          list(width = "60px", targets = 2),
-          list(width = "60px", targets = 3),
+          list(width = "60px", targets = c(1:(ncol(myTab)-1))),
+          #list(width = "60px", targets = 2),
+          #list(width = "60px", targets = 3),
           list(width = "100%", targets = 0)
         )
       ),
