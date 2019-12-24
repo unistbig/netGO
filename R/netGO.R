@@ -390,6 +390,7 @@ netGO <- function(genes, genesets, network, genesetV,
       category <- 1000
     }
     if(verbose){ cat(paste0(category,' genes in each category\n') )}
+    category <- ceiling(nrow(genesetV) / category)
   }
   else {
     category <- ceiling(nrow(genesetV) / category)
