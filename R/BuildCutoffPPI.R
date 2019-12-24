@@ -1,4 +1,3 @@
-#' @export
 BuildCutoffPPI <- function(PPI, Cutoff = 0.75) {
   for (i in 1:nrow(PPI)) {
     PPI[i, ] <- sapply(PPI[i, ], function(j) {
