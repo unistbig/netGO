@@ -41,31 +41,57 @@ nodetojs <- function(genes) {
 }
 
 sigIdx <- function(obj, R, Q) {
-  pv <- obj$`netGO+Q`
-  pvh <- obj$FisherQ
+  pv = obj$`netGO+P`
+  pvh = obj$FisherP
+  qv <- obj$`netGO+Q`
+  qvh <- obj$FisherQ
+
   names(pv) <- names(pvh) <- obj$`gene-set`
+  names(qv) <- names(qvh) <- obj$`gene-set`
+
   if (!is.null(Q)) {
-    idx <- which(pv <= Q | pvh <= Q)
-    return(idx)
+    idx <- which(qv <= Q | qvh <= Q)
   }
   if (!is.null(R)) {
-    idx2 <- which(rank(pv, ties.method = "first") <= R | rank(pvh, ties.method = "first") <= R)
-    idx = intersect(idx, idx2)
+    idx2 <- which(rank(pv, ties.method = "first") <= R |
+                    rank(pvh, ties.method = "first") <= R)
+    if(!exists('idx')){return(idx2)}
+
+    idx = union(names(idx),names(idx2))
+    idx = sapply(idx, function(i){which(obj$`gene-set`==i)})
+
+
   }
   return(idx)
 }
 
 buildCol <- function(obj, R, Q) {
+  A = B = c()
   if (!is.null(Q)) {
     A <- unname(which(obj$`netGO+Q` <= Q))
     B <- unname(which(obj$FisherQ <= Q))
   }
-  else {
-    A <- unname(which(rank(obj$`netGO+Q`, ties.method = "first") <= R))
-    B <- unname(which(rank(obj$FisherQ, ties.method = "first") <= R))
+
+  if(!is.null(R)){
+    if(length(A)){
+      A = union(A, unname(which(rank(obj$`netGO+P`, ties.method = "first") <= R)))
+      #A = intersect(A, unname(which(rank(obj$`netGO+P`, ties.method = "first") <= R)))
+    }
+    else{
+      A = unname(which(rank(obj$`netGO+P`, ties.method = "first") <= R))
+    }
+    if(length(B)){
+      B = union(B, unname(which(rank(obj$FisherP, ties.method = "first") <= R)))
+      #B = intersect(B, unname(which(rank(obj$FisherP, ties.method = "first") <= R)))
+    }
+    else{
+      B = unname(which(rank(obj$FisherP, ties.method = "first") <= R))
+    }
   }
+
   C <- intersect(A, B)
   res <- rep("NONE", length(obj$`netGO+Q`))
+  names(res) = obj$`gene-set`
   if (length(A)) {
     res[A] <- "netGO+"
   }
@@ -75,7 +101,8 @@ buildCol <- function(obj, R, Q) {
   if (length(C)) {
     res[C] <- "Both"
   }
-  res
+
+  res[which(res!='NONE')]
 }
 
 getIntersect <- function(gene, geneset) {
@@ -109,7 +136,6 @@ getIntersect <- function(gene, geneset) {
 
 fit <- function(genes, sGs) {
   if (length(intersect(genes, sGs))) {
-    sGs = intersect(sGs, rownames(network))
     runjs(
       paste0(
         "setTimeout(function(){", nodetojs(genes),
@@ -216,19 +242,30 @@ buildelement <- function(genes, sGs) {
 }
 
 server <- function(input, output, session) {
-  si <- sigIdx(obj, R = R, Q = Q)
-  myTab <- cbind(names(si), round(cbind(obj$`netGO+Q`, obj$`netGOQ`, obj$FisherQ)[si, ], 4))
-  myTab <- data.frame(myTab, stringsAsFactors = FALSE)
 
-  myTab[, 2] <- as.numeric(myTab[, 2]) # netGO+ Q value
-  myTab[, 3] <- as.numeric(myTab[, 3]) # netGO Q value
-  myTab[, 4] <- as.numeric(myTab[, 4]) # Fisher Q value
+  si <- sigIdx(obj, R = R, Q = Q)
+
+  myTab <- cbind(names(si), round(cbind(obj$`netGO+Q`, obj$FisherQ)[si, ], 4))
+  myTab <- data.frame(myTab, stringsAsFactors = FALSE)
+  colnames(myTab) <- c("Gene-set name", "netGO+<br>q-value", "Fisher<br>q-value")
+
+  if(!is.null(obj$netGOQ)){ # netGO and netGO+
+    myTab <- cbind(names(si), round(cbind(obj$`netGO+Q`, obj$`netGOQ`, obj$FisherQ)[si, ], 4))
+    myTab <- data.frame(myTab, stringsAsFactors = FALSE)
+    colnames(myTab) <- c("Gene-set name", "netGO+<br>q-value", "netGO<br>q-value", "Fisher<br>q-value")
+  }
+
+  for(i in 2:ncol(myTab)){
+    myTab[,i] = as.numeric(myTab[,i])
+  }
+
   rownames(myTab) <- myTab[, 1]
-  colnames(myTab) <- c("Gene-set name", "netGO+<br>q-value", "netGO<br>q-value", "Fisher's exact test<br>q-value")
-  myTab <- myTab[order(myTab[, 2]), ] # sort by netGO+
-  sGs <- genesets[[myTab[1, 1]]]
+  myTab <- myTab[order(myTab[, 2]), ] # sort by netGO+Q
+
+  sGs <- genesets[[myTab[1, 1]]] # selected Geneset
 
   elements <- buildelement(genes, sGs)
+
   output$txt1 <- renderText(paste0("Gene-set :", myTab[1, 1]))
   output$cy <- renderShinyCyJS(shinyCyJS(elements))
 
@@ -250,8 +287,9 @@ server <- function(input, output, session) {
         dom = "ltipr",
         autoWidth = TRUE,
         columnDefs = list(
-          list(width = "100px", targets = 1),
-          list(width = "150px", targets = 2),
+          list(width = "60px", targets = 1),
+          list(width = "60px", targets = 2),
+          list(width = "60px", targets = 3),
           list(width = "100%", targets = 0)
         )
       ),
@@ -259,6 +297,7 @@ server <- function(input, output, session) {
       escape = FALSE
     )
   )
+
   # network value
 
   myData <- data.frame(
@@ -270,9 +309,9 @@ server <- function(input, output, session) {
       obj$NetworkScore[which(obj$`gene-set` == i)]
     })),
     qvalue_log10 = sapply(names(si), function(i) {
-      as.numeric(-log10(as.numeric(obj$`netGO+Q`[which(obj$`gene-set` == i)])))
+      as.numeric(-log10(as.numeric(obj$`netGO+P`[which(obj$`gene-set` == i)])))
     }),
-    significant = buildCol(obj, R = R, Q = Q)[si]
+    significant = buildCol(obj, R = R, Q = Q)
   )
 
   myData <- myData[order(myData[, "significant"], decreasing = TRUE), ]
@@ -331,8 +370,10 @@ server <- function(input, output, session) {
       size <- sapply(1:nrow(myTab), function(i) {
         length(genesets[[ myTab[i, 1] ]])
       })
-      pv1 <- myTab[, 2]
-      pv2 <- myTab[, 3]
+      pv1 <- myTab[, 2] # netGO+
+      pv2 <- myTab[, 3] # Fisher
+
+      # genes
       g <- sapply(1:nrow(myTab), function(i) {
         genesets[[myTab[i, 1]]]
       })
@@ -346,10 +387,22 @@ server <- function(input, output, session) {
       g <- sapply(1:nrow(myTab), function(i) {
         paste0(sort(g[[i]]), collapse = ",")
       })
+
       text <- c("Gene-set\tSize\tnetGO+-Qvalue\tFisher-Qvalue\tGenes")
-      for (i in 1:(length(set))) {
-        text[i + 1] <- paste(set[i], size[i], pv1[i], pv2[i], g[[i]], sep = "\t")
+
+      if(ncol(myTab)==4){# netGO exist
+        pv3 = myTab[,4] # Fisher
+        text <- c("Gene-set\tSize\tnetGO+-Qvalue\tnetGO-Qvalue\tFisher-Qvalue\tGenes")
+        for (i in 1:(length(set))) {
+          text[i + 1] <- paste(set[i], size[i], pv1[i], pv2[i], pv3[i], g[[i]], sep = "\t")
+        }
       }
+      else{
+        for (i in 1:(length(set))) {
+          text[i + 1] <- paste(set[i], size[i], pv1[i], pv2[i], g[[i]], sep = "\t")
+        }
+      }
+
       writeLines(text, file)
     }
   )
