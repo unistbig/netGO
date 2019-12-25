@@ -596,7 +596,7 @@ exportGraph <- function(genes, geneset) {
   return(c(res[[1]], res[[2]], res[[3]], res[[4]]))
 }
 
-getIntersectPart <- function(gene, geneset) {
+getIntersectPart <- function(gene, geneset, network) {
   elements <- list()
   gs <- intersect(geneset, rownames(network))
   g <- intersect(gene, rownames(network))
