@@ -549,9 +549,9 @@ exportTable <- function(type = "", R = 50, Q = NULL) {
 }
 
 #' @export
-exportGraph <- function(genes, geneset) {
+exportGraph <- function(genes, geneset, network) {
   res <- list()
-  isobj <- getIntersectPart(genes, geneset)
+  isobj <- getIntersectPart(genes, geneset, network)
 
   if (length(setdiff(genes, geneset))) {
     res[[length(res) + 1]] <-
@@ -630,7 +630,7 @@ getIntersectPart <- function(gene, geneset, network) {
 }
 
 #' @export
-exportGraphTxt <- function(gene, geneset) {
+exportGraphTxt <- function(gene, geneset, network) {
   rn <- rownames(network)
   g <- intersect(gene, rn)
   gs <- intersect(geneset, rn)
