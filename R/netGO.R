@@ -434,7 +434,7 @@ netGO <- function(genes, genesets, network, genesetV,
 }
 
 #' @export
-netGOVis <- function(obj, genes, genesets, network, R = NULL, Q = 0.25) {
+netGOVis <- function(obj, genes, genesets, network, R = 50, Q = 0.25) {
   suppressPackageStartupMessages("")
 
   appDir <- system.file("netGO", package = "netGO")
@@ -487,39 +487,63 @@ DownloadExampleData <- function() {
   assign("genesetV", genesetV, envir = .GlobalEnv)
 }
 
-
 #' @export
-exportTable <- function(type = "", R = 50, Q = NULL) {
-  sigIdx <- function(obj, R, Q) {
-    pv <- obj$`netGO+Q`
-    pv2 <- obj$netGOQ
-    pvh <- obj$FisherQ
-    names(pv) <- names(pvh) <- names(pv2) <- obj$`gene-set`
-    if (!is.null(Q)) {
-      idx <- which(pv <= Q | pvh <= Q | pv2 <= Q)
-      return(idx)
-    }
-    else {
-      idx <- which(rank(pv, ties.method = "first") <= R | rank(pvh, ties.method = "first") <= R | rank(pv2, ties.method = "first") <= R)
-    }
+exportTable <- function(obj, type = "", R = 50, Q = 0.25) {
 
+  sigIdx <- function(obj, R, Q) {
+    pv = obj$`netGO+P`
+    pvh = obj$FisherP
+    qv <- obj$`netGO+Q`
+    qvh <- obj$FisherQ
+
+    names(pv) <- names(pvh) <- obj$`gene-set`
+    names(qv) <- names(qvh) <- obj$`gene-set`
+
+    if (!is.null(Q)) {
+      idx <- which(qv <= Q | qvh <= Q)
+    }
+    if (!is.null(R)) {
+      idx2 <- which(rank(pv, ties.method = "first") <= R |
+                      rank(pvh, ties.method = "first") <= R)
+      if(!exists('idx')){return(idx2)}
+
+      idx = union(names(idx),names(idx2))
+      idx = sapply(idx, function(i){which(obj$`gene-set`==i)})
+    }
     return(idx)
   }
-
   si <- sigIdx(obj, R, Q)
-  myTab <- cbind(names(si), round(cbind(obj$`netGO+Q`, obj$netGOQ, obj$FisherQ)[si, ], 4))
+
+
+  myTab <- cbind(names(si), round(cbind(obj$`netGO+Q`, obj$FisherQ)[si, ], 4))
   myTab <- data.frame(myTab, stringsAsFactors = FALSE)
+  colnames(myTab) <- c("Gene-set name", "netGO+ q-value", "Fisher q-value")
+  if(type=='D'){
+    colnames(myTab) <- c("Gene-set name", "netGO+<br>q-value", "Fisher<br>q-value")
+  }
 
-  myTab[, 2] <- as.numeric(myTab[, 2])
-  myTab[, 3] <- as.numeric(myTab[, 3])
-  myTab[, 3] <- as.numeric(myTab[, 4])
+
+  if(!is.null(obj$netGOQ)){ # netGO and netGO+
+    myTab <- cbind(names(si), round(cbind(obj$`netGO+Q`, obj$`netGOQ`, obj$FisherQ)[si, ], 4))
+    myTab <- data.frame(myTab, stringsAsFactors = FALSE)
+    colnames(myTab) <- c("Gene-set name", "netGO+ q-value", "netGO q-value", "Fisher q-value")
+    if(type=='D'){
+      colnames(myTab) <- c("Gene-set name", "netGO+<br>q-value", "netGO<br>q-value", "Fisher<br>q-value")
+    }
+
+  }
+
+  for(i in 2:ncol(myTab)){
+    myTab[,i] = as.numeric(myTab[,i])
+  }
+
   rownames(myTab) <- myTab[, 1]
-  colnames(myTab) <- c("Gene-set name", "netGO+ q-value", "netGO q-value", "FET q-value")
+  myTab <- myTab[order(myTab[, 2]), ] # sort by netGO+Q
 
-  myTab <- myTab[order(myTab[, 2]), ]
   D <- myTab
+
   if (type == "D") {
-    colnames(myTab) <- c("Gene-set name", "netGO+<br>q-value", "netGO<br> q-value", "FET<br>q-value")
+
     D <- datatable(
       myTab,
       rownames = FALSE,
@@ -534,9 +558,7 @@ exportTable <- function(type = "", R = 50, Q = NULL) {
         dom = "ltipr",
         autoWidth = TRUE,
         columnDefs = list(
-          list(width = "100px", targets = 1),
-          list(width = "150px", targets = 2),
-          list(width = "150px", targets = 3),
+          list(width = "60px", targets = c(1:(ncol(myTab)-1))),
           list(width = "100%", targets = 0)
         )
       ),
