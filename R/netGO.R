@@ -374,10 +374,41 @@ BuildGenesetV <- function(network, genesets) {
   return(GenesetV)
 }
 
+AdjBackNet = function(genes, network){
+  ingenes = intersect(genes, rownames(network))
+  network = network[ingenes,ingenes]
+  return(network)
+}
+
+AdjBackGS = function(genes, genesets){
+  for(i in 1:length(genesets)){
+    genesets[[i]] = intersect(genes, genesets[[i]])
+  }
+  rem = c()
+  for(i in 1:length(genesets)){
+    if(length(genesets[[i]])==0){
+      rem = c(rem,i)
+    }
+  }
+  if(length(rem)){
+    genesets = genesets[-rem]
+  }
+  return(genesets)
+}
+
 #' @export
-netGO <- function(genes, genesets, network, genesetV,
+netGO <- function(genes, genesets, network, genesetV, back = NULL,
                   alpha = 20, beta = 0.5, nperm = 10000, category = NULL,
                   pvalue = TRUE, plus = TRUE, verbose = TRUE) {
+
+  if(!is.null(back)){
+    # adjust genesets & genesetV
+    genesets = AdjBackGS(back, genesets)
+    # adjust network
+    network = AdjBackNet(back, network)
+    genesetV = BuildGenesetV(network, genesets)
+
+  }
 
   pvh <- getHyperPvalue(genes, genesets)
   if(verbose){
