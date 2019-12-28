@@ -23,6 +23,7 @@ library(shinyCyJS)
 ```
 
 * linux user should install V8 after install additional packages.<br>
+* note that, v8 cannot be used in centOS 8, therefore netGO also can't be used.<br>
 
 On Debian / Ubuntu : libv8-dev or libnode-dev. <br>
 On Fedora : v8-devel <br>
@@ -31,16 +32,16 @@ On Fedora : v8-devel <br>
 if you need, use this code.
 
 ``` R
-install.package('devtools') # 2.2.1
-install.package('doParallel') # 1.0.15
-install.package('doSNOW') # 1.0.18
-install.package('DT') # 0.11
-install.package('foreach') # 1.4.7
-install.package('googleVis') # 0.6.4
-install.package('htmlwidgets') # 1.5.1
-install.package('shiny') # 1.4.0
-install.package('shinyjs') # 1.0
-install.package('V8') # 2.3
+install.packages('devtools') # 2.2.1
+install.packages('doParallel') # 1.0.15
+install.packages('doSNOW') # 1.0.18
+install.packages('DT') # 0.11
+install.packages('foreach') # 1.4.7
+install.packages('googleVis') # 0.6.4
+install.packages('htmlwidgets') # 1.5.1
+install.packages('shiny') # 1.4.0
+install.packages('shinyjs') # 1.0
+install.packages('V8') # 2.3
 ```
 
 ## :wrench: Example Run
