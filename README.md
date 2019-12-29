@@ -9,11 +9,11 @@ The R packages listed below are required to be installed before running netGO.(A
 
 *devtools, doParallel, doSNOW, DT, foreach, googleVis, htmlwidgets, shiny, shinyCyJS, shinyjs, V8*
 
-* Most of the packages are avaiable from[CRAN](https://cran.r-project.org/), but [shinyCyJS](https://github.com/unistbig/shinyCyJS) needs to be installed from github.<br>
+* Most of the packages are avaiable from [CRAN](https://cran.r-project.org/), but [shinyCyJS](https://github.com/unistbig/shinyCyJS) should be installed from github.<br>
 
 * Linux user has to install V8 after installing the other packages.<br>
 
-* Note that netGO is not supported for centOS8, because V8 is not available in centoOS8.<br>
+* Note that netGO is not supported for centOS 8, because V8 is not available in centOS 8.<br>
 
 On Debian / Ubuntu : libv8-dev or libnode-dev. <br>
 On Fedora : v8-devel <br>
@@ -50,7 +50,7 @@ obj = netGO(genes = brca[1:30], genesets, network, genesetV)
 # load("brcaresult.RData")   
 ```
   
-Running this exmaple takes 5 to 25 minutes depending on the system used. The analysis retuls of netGO is shown below.<br>
+Running this example takes 5 to 25 minutes depending on the system used. The analysis results of netGO is shown below.<br>
  
 <img src ='https://user-images.githubusercontent.com/6457691/70370939-f5f68880-190f-11ea-9615-b11fb789fd0e.png'></img>
 
@@ -114,7 +114,7 @@ The user can download the  breast tumor data using *DownloadExampleData* functio
 
 netGO requires the follwoing four data types.<br>
 - *genes* : a character vector of input genes (e.g., differentially expressed genes).<br>
-- *genesets* : a list of gene-sets cto be tested.<br>
+- *genesets* : a list of gene-sets to be tested.<br>
 - *network* : a numeric matrix of network data. The network scores are normalized to the unit interval [0,1] by dividing each score by the maximum score<br>
 - *genesetV* : A numeric matrix of pre-calculated interaction data between gene and gene-sets.<br>
   The dimension of matrix must be [{number of genes} , {number of gene-sets}]. <br>
@@ -158,11 +158,10 @@ and returns a data frame of gene-sets, their *p*-values, *q*-values derived from
 
 <img src = 'https://user-images.githubusercontent.com/6457691/71439289-61c45800-273c-11ea-86db-a06bec993486.png' width = 500></img>
 
-* nperm (optional): a numeric parameter to determine the bin size (number of genes) to be used during resampling. The default is NULL which assigns approximately 2000 genes to each bin<br>
-  default is NULL. and it will divide ~ 2000 genes to each category.<br>
+* nperm (optional): a numeric parameter to determine the bin size (number of genes) to be used during resampling. The default is NULL which assigns approximately 2000 genes to each bin<br>  
 * pvalue (optional): a boolean parameter to determine whether to return Q-values only ( FALSE ) or both P-values and Q-values (TRUE)<br>
-* plus (optinoal): a boolean parameter to determine whether to run both netGO and netGO+ (plus = FALSE) or netGO+ only ( plus = TRUE, default )<br>
-* verbose (optional) : a boolean parameter<br>
+* plus (optional): a boolean parameter to determine whether to run both netGO and netGO+ (plus = FALSE) or netGO+ only ( plus = TRUE, default )<br>
+* verbose (optional) : a boolean parameter to show more process of netGO <br>
 
 After running the example, the user may see the following logs in R console.<br>
 
@@ -180,7 +179,7 @@ The resulting graphs (svg format) and table are downloadable from the web browse
 
 <b>Input arguments</b>
 
-* obj: the data frame of analysis results obtained by running netGO function.<br>
+* obj: the data frame of analysis results obtained by running **netGO** function.<br>
 It consists of multiple columns including <br>
 
 1.	gene-set name and p, q-values evaluated using netGO (optional), netGO+, and Fisher’s exact test as well as the scores for the overlap and networks.<Br>
@@ -189,7 +188,7 @@ It consists of multiple columns including <br>
 * R (optional): gene-set rank threshold, The default is 50 (Top 50 gene-sets in either method will be shown).<br>
 * Q (optional): Gene-set Q-value threshold, The default is 0.25. (gene-sets with Q-value ≤ 0.25 will be used)<br>
 
-Afte running the netGO function, the user may see the following logs in the R console.
+After running the netGO function, the user may see the following logs in the R console.
 
 <img src = 'https://user-images.githubusercontent.com/6457691/71439835-6a1d9280-273e-11ea-922a-06bf35c45658.png'></img>
             
@@ -221,7 +220,7 @@ Note that, if objects exist in the working directory, this function will not dow
 
 ### 5. exportGraph()
 
-exportGraph function will export network data from the netGO analsysis result as graph object<br>
+exportGraph function will export network data from the netGO analsysis result as graph object that can be accessed using shinyCyJS function<br>
 
 <b>Input arguments</b>
 * genes, network : the same as those in the *netGO* function.<br> 
