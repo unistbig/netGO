@@ -1,38 +1,31 @@
-# :yellow_heart: netGO <img src ='https://user-images.githubusercontent.com/6457691/71441958-1a8f9480-2747-11ea-8250-95f481180073.png' align = 'right' width = 150></img>
-
-
 netGO is an R/Shiny package for network-integrated pathway enrichment analysis.<br>
 netGO provides user-interactive visualization of enrichment analysis results and related networks.<br>
 
-Currently, netGO provides network and annotation gene-set data for 4 species. (*[Arabidopsis](https://github.com/unistbig/netGO-Data/tree/master/Arabidopsis), [Human](https://github.com/unistbig/netGO-Data/tree/master/Human), [Mouse](https://github.com/unistbig/netGO-Data/tree/master/Mouse), and [Yeast](https://github.com/unistbig/netGO-Data/tree/master/Yeast)*)<br>
+Currently, netGO supports analysis for four species (*[Human](https://github.com/unistbig/netGO-Data/tree/master/Human), [Mouse](https://github.com/unistbig/netGO-Data/tree/master/Mouse), [Arabidopsis thaliana](https://github.com/unistbig/netGO-Data/tree/master/Arabidopsis),and [Yeast](https://github.com/unistbig/netGO-Data/tree/master/Yeast)*)<br>
 These data are available from [netGO-Data](https://github.com/unistbig/netGO-Data) repository.<br>
 
 ## :clipboard: Prerequisites
-
-these R packages should be installed before run netGO. (Alphabetical ordered)<br>
+The R packages listed below are required to be installed before running netGO.(Alphabetical order)<br>
 
 *devtools, doParallel, doSNOW, DT, foreach, googleVis, htmlwidgets, shiny, shinyCyJS, shinyjs, V8*
 
-most of packages are avaiable with [CRAN](https://cran.r-project.org/).<br>
-* but [shinyCyJS](https://github.com/unistbig/shinyCyJS) needs to be install with github.<br>
+* Most of the packages are avaiable from[CRAN](https://cran.r-project.org/), but [shinyCyJS](https://github.com/unistbig/shinyCyJS) needs to be installed from github.<br>
 
-```R
-library(devtools)
-install_github('unistbig/shinyCyJS')
-library(shinyCyJS)
-```
+* Linux user has to install V8 after installing the other packages.<br>
 
-* linux user should install V8 after install additional packages.<br>
-* note that, v8 cannot be used in centOS 8, therefore netGO also can't be used.<br>
+* Note that netGO is not supported for centOS8, because V8 is not available in centoOS8.<br>
 
 On Debian / Ubuntu : libv8-dev or libnode-dev. <br>
 On Fedora : v8-devel <br>
 [more information](https://cran.r-project.org/web/packages/V8/index.html)
 
-if you need, use this code.
+
+The user may want to use the following codes to install the required packages.
 
 ``` R
 install.packages('devtools') # 2.2.1
+library(devtools)
+install_github('unistbig/shinyCyJS')
 install.packages('doParallel') # 1.0.15
 install.packages('doSNOW') # 1.0.18
 install.packages('DT') # 0.11
@@ -44,35 +37,24 @@ install.packages('shinyjs') # 1.0
 install.packages('V8') # 2.3
 ```
 
-## :wrench: Example Run
+## :wrench: Running with an example data
 
-We prepared example run with breast tumor dataset from *NCBI GEO [GSE3744](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE3744)<br>*
+Here are codes to run netGO for the breast tumor dataset (*GEO [GSE3744](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE3744).*)<br>
 
 ```r  
 library(netGO) # load netGO library
-DownloadExampleData() # Download and load example breast tumor datasets
-
-# run netGO, this may takes a time.
-# or user can load pre-calculated result using this command 
-# load("brcaresult.RData")   
-
+DownloadExampleData() # Download and load the breast tumor data
 obj = netGO(genes = brca[1:30], genesets, network, genesetV) 
 
+# The user may also load the pre-calculated result using the following command
+# load("brcaresult.RData")   
 ```
   
-This example run takes around ~ 10 mins on Desktop,<br>
-and 15 - 25 min on Laptop ( not included time for download data )<br>  
-
-user can briefly see the netGO's analysis result.
-  
-```r
-head(obj)
-```
-
+Running this exmaple takes 5 to 25 minutes depending on the system used. The analysis retuls of netGO is shown below.<br>
+ 
 <img src ='https://user-images.githubusercontent.com/6457691/70370939-f5f68880-190f-11ea-9615-b11fb789fd0e.png'></img>
 
-also user can visualize result with netGOVis function.
-  
+The analysis result can be visualized using the following codes:<br>  
 ```r  
 netGOVis(obj, genes = brca[1:30], genesets, network, R = 50, Q = 0.25 ) # visualize netGO's result
 ```
@@ -80,19 +62,17 @@ netGOVis(obj, genes = brca[1:30], genesets, network, R = 50, Q = 0.25 ) # visual
 <br>  
 <img src = 'https://user-images.githubusercontent.com/6457691/70369640-09015c80-1900-11ea-9eb3-f825e2cbf511.png'></img>
 
-if user want to access result without shinyweb-application, <br>
-user can export this result as text format using *exportGraphTxt, exportGraph, exportTable* functions.<br>
-more description explained in API term.<br>
-
-here are example codes.<br>
+If user wants to access result without shinyweb-application, the following functions can be used to export the result as text files<br>
 
 ```r 
 # exportGraphTxt
-table = exportGraphTxt(gene = brca[1:30], geneset = genesets[['SMID_BREAST_CANCER_NORMAL_LIKE_UP']], network) # table
+table = exportGraphTxt(gene = brca[1:30], geneset = 
+genesets[['SMID_BREAST_CANCER_NORMAL_LIKE_UP']], network) # table
 head(table)
 
 # exportGraph
-graph = exportGraph(brca[1:30], geneset = genesets[['SMID_BREAST_CANCER_NORMAL_LIKE_UP']], network) # shinyCyJS graph object
+graph = exportGraph(brca[1:30], geneset = 
+genesets[['SMID_BREAST_CANCER_NORMAL_LIKE_UP']], network) # shinyCyJS graph object
 shinyCyJS(graph)
 
 # exportTable
@@ -101,30 +81,29 @@ head(table)
 
 dtable = exportTable(obj, type='D', R = 50, Q = 0.25) # data.table
 dtable
-
 ``` 
 
-## :memo: Datas
+## :memo: Data
 
 ### <b>Example Datasets</b> [(netGO-Data repository)](https://github.com/unistbig/netGO-Data) <br>  
  
-#### Human (in human directory)
+#### Human 
 
 |Data|Genes|Genesets|Network|GenesetV|
 |:---:|:---:|:---:|:---:|:---:|
 |Breast Tumor|brca.RData|c2gs.RData|networkString.RData networkHumannet.RData|genesetVString1,2.RData genesetVHumannet1,2.RData|
 |P53|p53.RData|c2gs.RData|networkString.RData networkHumannet.RData|genesetVString1,2.RData genesetVHumannet1,2.RData|
-|Diabete|dg.RData|cpGenesets.RData|networkString.RData networkHumannet.RData|cpgenesetV1,2.RData|
+|Diabetes|dg.RData|cpGenesets.RData|networkString.RData networkHumannet.RData|cpgenesetV1,2.RData|
 
-user can use Breast tumor data with *DownloadExampleData* function in netGO (Recommended)
+The user can download the  breast tumor data using *DownloadExampleData* function(Recommended)
 
-#### Arabidopsis
+#### Arabidopsis thaliana
 
 |Data|Genes|Genesets|Network|GenesetV|
 |:---:|:---:|:---:|:---:|:---:|
 |ShadowResponse|Aragenes.RData|KEGGara.RData|networkAranet.RData|AragenesetV.RData|
 
-#### Mouse & Yeast ( geneset, network available )
+#### Mouse & Yeast ( gene-set and networks available )
 
 |Species|Genesets|Network|
 |:----:|:----:|:----:|
@@ -133,13 +112,13 @@ user can use Breast tumor data with *DownloadExampleData* function in netGO (Rec
 
 ### <b>Data Formats</b>
 
-netGO needs 4 data.<br>
-- *genes* : A character vector of input genes (e.g., DE genes).<br>
-- *genesets* : A list of gene-sets consisting of groups of genes.<br>
-- *network* : A numeric matrix of network data. The network score range is normalized in scale [0,1].<br>
+netGO requires the follwoing four data types.<br>
+- *genes* : a character vector of input genes (e.g., differentially expressed genes).<br>
+- *genesets* : a list of gene-sets cto be tested.<br>
+- *network* : a numeric matrix of network data. The network scores are normalized to the unit interval [0,1] by dividing each score by the maximum score<br>
 - *genesetV* : A numeric matrix of pre-calculated interaction data between gene and gene-sets.<br>
-  The dimension of matrix must be [ {number of genes} , {number of gene-sets}]. <br>
-  It can be built by using *BuildGenesetV* function with network and gene-set objects as input arguments.
+  The dimension of matrix must be [{number of genes} , {number of gene-sets}]. <br>
+  It can be built by using *BuildGenesetV* function with network and genesets objects as the input arguments.
 
   ```r
   genesetV = BuildGenesetV(network, genesets)
@@ -149,15 +128,14 @@ netGO needs 4 data.<br>
 <hr>
 
 ### 1. netGO
-netGO function calculates significant gene and genesets<br>
-and returns a data frame of Gene-sets, and their P-value, Q-values derived from netGO+, Fisher’s exact test and *netGO (optional)*.<br>
-and score for network interaction and overlap <br>
+netGO function tests the significance of the gene-sets for the input gene list<br>
+and returns a data frame of gene-sets, their *p*-values, *q*-values derived from netGO+, Fisher’s exact test and netGO (optional) as well as the scores for the network interaction and overlap.<br>
 
 <b>Input arguments</b>
  
-* genes: A character vector of input genes (e.g., DE genes).<br>
-* genesets: A list of gene-sets consisting of groups of genes.<br>
-* network: A numeric matrix of network data. The network score range is [0,1]. 1 for strong interaction and 0 for no interaction<br>
+* genes: a character vector of input genes (e.g., differentially expressed genes).<br>
+* genesets: a list of gene-sets consisting of groups of genes.<br>
+* network: A numeric matrix of network data. The network scores are normalized to the unit interval [0,1]. 1 represents strong interaction and 0 for no interaction<br>
   
   | |A|B|C|
   |:--:|:--:|:--:|:--:|
@@ -165,8 +143,8 @@ and score for network interaction and overlap <br>
   |B|0.1|0|0.324|
   |C|0.76|0.324|0|
   
-* genesetV: A numeric matrix of pre-calculated interaction data between gene and gene-sets.<br>
-  this can be built with *BuildGenesetV* function.
+* genesetV: a numeric matrix of pre-calculated interaction data between genes and gene-sets.<br>
+  This object can be built with *BuildGenesetV* function.
   
   | |Gene-set1|Gene-set2|Gene-set3|
   |:--:|:--:|:--:|:--:|
@@ -174,57 +152,48 @@ and score for network interaction and overlap <br>
   |B|0|1.75|0.113|
   |C|0.464|0.486|2.442|
     
-* alpha (optional): A numeric parameter weights how much network score will be effected. <br>
-  The value is positive numeric value with > 1 and the default is 20.<br>
-* beta (optional): A numeric parameter balancing the weights between the relative and absolute network scores.<br> 
-  The value is between 0 and 1 and the default is 0.5.<br>
+* alpha (optional): a numeric parameter ( ≥ 1; the default is 20) that weights the contribution of network connections in enrichment analysis.<br>
+  
+* beta (optional): a numeric parameter (∈[0,1]; the default is 0.5) that balances the weights between the relative and absolute network scores.<br>
 
 <img src = 'https://user-images.githubusercontent.com/6457691/71439289-61c45800-273c-11ea-86db-a06bec993486.png' width = 500></img>
 
-* nperm (optional): A numeric parameter to tell netGO how many times permutation will be repeated, default is 10000<br>
-* category (optional): A numeric parameter to decide number of genes will be categorized while resampling. <br>
+* nperm (optional): a numeric parameter to determine the bin size (number of genes) to be used during resampling. The default is NULL which assigns approximately 2000 genes to each bin<br>
   default is NULL. and it will divide ~ 2000 genes to each category.<br>
-* pvalue (optional): A boolean parameter to tell whether return Q-values only ( FALSE ) or both P-values and Q-values (TRUE)
-* plus (optinoal): A boolean parameter to tell whether netGO will calculate both netGO, netGO+ (plus = FALSE) or netGO+ only ( plus = TRUE, default )<br>
-* verbose (optional) : A boolean parameter to show more process of netGO.<br>
+* pvalue (optional): a boolean parameter to determine whether to return Q-values only ( FALSE ) or both P-values and Q-values (TRUE)<br>
+* plus (optinoal): a boolean parameter to determine whether to run both netGO and netGO+ (plus = FALSE) or netGO+ only ( plus = TRUE, default )<br>
+* verbose (optional) : a boolean parameter<br>
 
-for more information about alpha, beta and category, please refer our manuscript. 
-
-After Example run, user may see these logs in R console.
+After running the example, the user may see the following logs in R console.<br>
 
 <img src='https://user-images.githubusercontent.com/6457691/71439716-0e530980-273e-11ea-8b27-3621c90416cc.png'></img>
 
-**Notice** member of genes should be gene symbols when using the default STRING and mSigDB data. <br>
-Other types of gene names are also available if the corresponding customized data (network and gene-set data) are used.
+**Notice** the input genes should be represented in **gene symbols** when using the default networks and gene-sets (STRING and MSigDB). <br>
+Other types of gene names are also allowed if the corresponding customized data (networks and gene-set data) are used. <br>
+
 <hr>
 
 ### 2. netGOVis 
 
-netGOVis function visualizes netGo's result on the web browser (google chrome is recommended).<br> 
-The result graphs *(svg format)* and table are downloadable from the web browser.<br>
+netGOVis function visualizes the analysis results on the web browser (google chrome is recommended).<br> 
+The resulting graphs (svg format) and table are downloadable from the web browser.<br>
 
 <b>Input arguments</b>
 
-* obj: A result data frame derived from <b>netGO</b> function.<br>
+* obj: the data frame of analysis results obtained by running netGO function.<br>
 It consists of multiple columns including <br>
-1) gene-set name and <br>
-p, q-values evaluated from <br>
-2) *netGO (optional)*, <br>
-3) netGO+, and <br>
-4) Fisher’s exact test.<br>
-and additional<br>
-5) Overlap and <br>
-6) Network scores<br>
 
-* genes, genesets, network: same as in the *netGO* function.<br> 
-* R (optional): Gene-set rank threshold, default is 50 (Top 50 gene-sets in either method will be shown).<br>
-* Q (optional): Gene-set Q-value threshold, default is 0.25. (Gene-sets with Q-value <= 0.25 will be used)<br>
+1.	gene-set name and p, q-values evaluated using netGO (optional), netGO+, and Fisher’s exact test as well as the scores for the overlap and networks.<Br>
 
-After Example run, user may see these logs in R console.
+* genes, genesets, network: the same as those in the *netGO* function.<br> 
+* R (optional): gene-set rank threshold, The default is 50 (Top 50 gene-sets in either method will be shown).<br>
+* Q (optional): Gene-set Q-value threshold, The default is 0.25. (gene-sets with Q-value ≤ 0.25 will be used)<br>
+
+Afte running the netGO function, the user may see the following logs in the R console.
 
 <img src = 'https://user-images.githubusercontent.com/6457691/71439835-6a1d9280-273e-11ea-922a-06bf35c45658.png'></img>
             
-and user's default web browser (<b>we built netGO based on chrome environment</b>) will return this interactive results.
+and user's default web browser (<b>netGO was built based on chrome environment</b>) will return the following interactive visualization:
 
 <img src = 'https://user-images.githubusercontent.com/6457691/71439882-946f5000-273e-11ea-952f-6eda92b3f090.png' width = 700></img>
                         
@@ -232,21 +201,18 @@ and user's default web browser (<b>we built netGO based on chrome environment</b
 
 ### 3. BuildGenesetV
 
-BuildGenesetV function will build genesetV object with given network and geneset. <br>
-genesetV is pre-calculated interaction files to reduce running time in netGO.
+BuildGenesetV function will build genesetV object using the given *network* and *genesets*. <br>
+genesetV is pre-calculated interaction files used to reduce the running time of netGO.
 
 <b>Input arguments</b>
 
-* genesets, network: same as in the *netGO* function.<br> 
+* genesets, network: the same as those in the *netGO* function.<br> 
 <hr>
 
 ### 4. DownloadExampleData()
 
-DownloadExampleData function will <br> 
-1) Download example dataset object in user's working directory and <br>
-2) load Example dataset ( breast tumor, [GSE3744](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE3744) ) in user's R environment.<br>
-note that, if objects exist in working directory, it'll not download again, <br>
-but we recommend that, remove and re-download them when netGO package updated.
+This function will download example data in the user's working directory and load the data ( breast tumor, [GSE3744](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE3744) ) in user's R environment.<br>
+Note that, if objects exist in the working directory, this function will not download the data again, so we recommand removing and downloading them again if netGO package is updated. <br>
 
 <b>Input arguments</b>
 * none
@@ -255,62 +221,63 @@ but we recommend that, remove and re-download them when netGO package updated.
 
 ### 5. exportGraph()
 
-exportGraph function will export interaction in netGO's result object as graph object that can be accessed with *[shinyCyJS](https://github.com/unistbig/shinyCyJS)* function.<br>
+exportGraph function will export network data from the netGO analsysis result as graph object<br>
 
 <b>Input arguments</b>
-* genes, network : same as in the *netGO* function.<br> 
+* genes, network : the same as those in the *netGO* function.<br> 
 
-* geneset : A character vector of gene symbols (e.g., one member of genesets object in *netGO*).<br>
+* geneset : a character vector of gene symbols (e.g., member of genesets object in *netGO*).<br>
 
 for example, 
 
 ``` R
 geneset = genesets[['SMID_BREAST_CANCER_NORMAL_LIKE_UP']]
-graph = exportGraph(brca[1:30], geneset = genesets[['SMID_BREAST_CANCER_NORMAL_LIKE_UP']], network) # shinyCyJS graph object
+graph = exportGraph(brca[1:30], geneset = 
+genesets[['SMID_BREAST_CANCER_NORMAL_LIKE_UP']], network) # shinyCyJS graph object
 
 shinyCyJS(graph)
-
 ```
-note that, see graph with R's default viewer (not web browser), will not use layout functions.<br>
-so result will have different shape. <br>
+
+However, the default viewer of R (not web browser) will not use the layout functions as shown below.<br>
 
 <img src='https://user-images.githubusercontent.com/6457691/71440782-eb2a5900-2741-11ea-99ad-1e147e5e142b.gif' width = 500></img>
 <hr>
 
 ### 6. exportGraphTxt()
 
-exportGraphTxt function will export interaction in netGO's result object as table format.<br>
+exportGraphTxt function will export network data from the netGO analysis result as table format.<br>
 
 <b>Input arguments</b>
-* genes, network, geneset : same as in the *exportGraph* function.<br> 
+* genes, network, geneset : the same as those in the *exportGraph* function.<br> 
 
-for example, 
+For example, 
 
 ``` R
 table = exportGraphTxt(brca[1:30], geneset, network)
 head(table)
 ```
 
-it will have format of 
+the exported data are shown as
 
 |geneA|geneB|strength|type|
 |:---:|:---:|:---:|:---:|
 |A|B|0.1|Inter|
 |C|D|0.82|Inner|
 
-which means, there is Interaction in A & B gene with 0.1 strength ( 0 is weaker, 1 is stronger )<br>
-and Inter means A & B gene are not overlapped between *gene* and *geneset*. <br>
+which means, there is interaction between genes A and B with the strength of 0.1 ( 0 means no interaction, 1 means strong interaction )<br>
+and 'Inter' means A and B are not overlapped between *gene* and *geneset*.<br>
 
-also there is Interaction in C & D gene with 0.82 strength<br>
-while Inner means C & D gene are overlapped between *gene* and *geneset*. <br>
+there is also interaction between genes C and D with the strength of 0.82<br>
+while 'Inner' means C and D are overlapped between *gene* and *geneset*.
+
 <hr>
 
 ### 7. exportTable()
 
-exportTable will export netGO's result object as table or data.table.
+exportTable will export the result object of netGO as table or data.table.
 
 <b>Input arguments</b>
-* obj, R, Q : same as in the *netGOVis* function.<br> 
+* obj, R, Q : the same as those in the *netGOVis* function.<br> 
 
 for example, 
 
@@ -322,7 +289,7 @@ dtable = exportTable(obj, type='D', R = 50, Q = 0.25) # data.table
 dtable
 ```
 
-result will have format of 
+The exported data have the format as follows:<br>
 
 |geneset name|netGO+ q-value| Fisher q-value |
 |:---:|:---:|:---:|
@@ -330,44 +297,47 @@ result will have format of
 
 <hr>
 
-## :blue_book: Explore with netGO
+## :blue_book: Visualization and exploration of netGO analysis results
 
-visualization page of netGO consists of 3 parts : Network, Table, Bubble.
+The netGO analysis results are visualized through three panels: interaction networks, list of significant gene-sets, and the bubble chart.<br>
 
-### <b>Network</b>
+### <b>Interaction Network</b>
 
-* Network panel displays the input genes, selected gene-set, and the network connections between the two.  
-* ![#48dbfb](https://placehold.it/15/48dbfb/000000?text=+) Sky blue nodes represent input genes (e.g., DE genes) 
+* The network panel displays the input genes, selected gene-set, and the network connections between the two.
+* ![#48dbfb](https://placehold.it/15/48dbfb/000000?text=+) Sky blue nodes represent input genes (e.g., differentially expressed genes) 
 * ![#feca57](https://placehold.it/15/feca57/000000?text=+) Yellow nodes represent genes in the selected gene-set 
 * ![#1dd1a1](https://placehold.it/15/1dd1a1/000000?text=+) Green nodes represent the intersection of input genes and the gene-set. 
 * The edge width represents the strength of interaction between two nodes. 
-* ![#feca57](https://placehold.it/15/feca57/000000?text=+) Gene-set Nodes without edges will be discarded.
-* The gene-set can be selected by clicking on the gene-set name in the Table on the right side. 
-* The users can download the graph image as SVG format.
+* Genes without edges will be not be displayed.
+*	The gene-set can be selected by clicking on the gene-set name on the upper-right panel.
+*	The user can download the graph image as SVG format.
 
  <img src = 'https://user-images.githubusercontent.com/6457691/70425850-4e1abf80-1ab5-11ea-96a3-84ac3e82d9f9.png' width = 900></img>
 
-### <b> Table </b>
+### <b>Significant gene-sets</b>
 
-* Table contains the names of gene-sets and their Q-values ( or P-values ) evaluated from netGO, netGO+ and Fisher’s exact test, respectively. It is downloadable by clicking the ‘Download Table’ button in the upper right of the table 
+* This panel contains the list of significant gene-sets as well as their Q-values ( or P-values ) evaluated from netGO, netGO+ and Fisher’s exact test. It is downloadable by clicking the ‘Download Table’ button in the upper right corner of the table <br>
+
  <img src ='https://user-images.githubusercontent.com/6457691/70425051-c84a4480-1ab3-11ea-8eb4-4b45385943fe.png'></img>
  
-### <b> Bubble </b>
+### <b>Bubble chart</b>
  
-* Bubble module plots the bubble chart of significant gene-sets. <br>
-* The overlap (x-axis) and network scores (y-axis) of each significant gene-sets are represented. <br> 
-* The size of bubbles represents the significance level of each gene-set in -log10 scale (Qvalue).
-* Hovering/Click on each bubble will show statistcial values.
+* This module plots the bubble chart of significant gene-sets for the netGO+ results.
+* The overlap (x-axis) and network (y-axis) scores of the significant gene-sets are represented.
+*	The size of bubbles represents the significance level of each gene-set in -log10 scale (Qvalue).
+* Hovering/Click on each bubble will show corresponding statistical values.
  
 <img src ='https://user-images.githubusercontent.com/6457691/70425757-1c095d80-1ab5-11ea-99f6-4198fa48b384.png'></img>
  
-## :blush: Authors
-* :octocat: Jinhwan Kim [@jhk0530](http://github.com/jhk0530)
+## :blush: Contact
 
-* comment / suggest / question will be really appreciated, *kjh0530@unist.ac.kr*
+* Comments / suggestions and questions will be greatly appreciated,
+
+* :octocat: Jinhwan Kim [@jhk0530](http://github.com/jhk0530) 
+
+* prof. Dougu Nam *dougnam@unist.ac.kr*
 
 ## :memo: License
-Copyright :copyright: 2019 Jinhwan Kim
+
 This project is [MIT](https://opensource.org/licenses/MIT) licensed
 
-*This README was generated with :two_hearts: by [shinyReadme](http://github.com/jhk0530/shinyReadme)*
