@@ -121,7 +121,7 @@ The user can download the  breast tumor data using *DownloadExampleData* functio
 
 netGO requires the follwoing four data types.<br>
 - *genes* : a character vector of input genes (e.g., differentially expressed genes).<br>
-- *genesets* : a list of gene-sets to be tested.<br>
+- *genesets* : a named list of gene-sets consisting of groups of genes to be tested.<br>
 - *network* : a numeric matrix of network data. The network scores are normalized to the unit interval [0,1] by dividing each score by the maximum score<br>
 - *genesetV* : A numeric matrix of pre-calculated interaction data between gene and gene-sets.<br>
   The dimension of matrix must be [{number of genes} , {number of gene-sets}]. <br>
@@ -334,7 +334,7 @@ The netGO analysis results are visualized through three panels: interaction netw
 
 * Comments / suggestions and questions will be greatly appreciated,
 
-* :octocat: Jinhwan Kim [@jhk0530](http://github.com/jhk0530) 
+* :octocat: Jinhwan Kim [@jhk0530](http://github.com/jhk0530) *kjh0530@unist.ac.kr*
 
 * prof. Dougu Nam *dougnam@unist.ac.kr*
 
