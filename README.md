@@ -49,7 +49,14 @@ obj = netGO(genes = brca[1:30], genesets, network, genesetV)
 # The user may also load the pre-calculated result using the following command
 # load("brcaresult.RData")   
 ```
-  
+
+For custom data analysis, 
+
+```r
+library(netGO)
+userGenesetV = BuildGenesetV(genesets = userGenesets, network = userNetwork)
+obj = netGO(genes = userGenes, genesets = userGenesets, network = userNetwork, genesetV = userGenesetV)
+```
 Running this example takes 5 to 25 minutes depending on the system used. The analysis results of netGO is shown below.<br>
  
 <img src ='https://user-images.githubusercontent.com/6457691/70370939-f5f68880-190f-11ea-9615-b11fb789fd0e.png'></img>
@@ -89,7 +96,7 @@ dtable
  
 #### Human 
 
-|Data|Genes|Genesets|Network|GenesetV|
+|Data|genes|genesets|network|genesetV|
 |:---:|:---:|:---:|:---:|:---:|
 |Breast Tumor|brca.RData|c2gs.RData|networkString.RData networkHumannet.RData|genesetVString1,2.RData genesetVHumannet1,2.RData|
 |P53|p53.RData|c2gs.RData|networkString.RData networkHumannet.RData|genesetVString1,2.RData genesetVHumannet1,2.RData|
@@ -99,13 +106,13 @@ The user can download the  breast tumor data using *DownloadExampleData* functio
 
 #### Arabidopsis thaliana
 
-|Data|Genes|Genesets|Network|GenesetV|
+|Data|genes|genesets|network|genesetV|
 |:---:|:---:|:---:|:---:|:---:|
 |ShadowResponse|Aragenes.RData|KEGGara.RData|networkAranet.RData|AragenesetV.RData|
 
 #### Mouse & Yeast ( gene-set and networks available )
 
-|Species|Genesets|Network|
+|Species|genesets|network|
 |:----:|:----:|:----:|
 |Mouse|KEGGmouse.Rdata|networkMousenet.Rdata|
 |Yeast|KEGGyeast.Rdata|networkYeastnet.Rdata|
@@ -161,9 +168,7 @@ and returns a data frame of gene-sets, their *p*-values, *q*-values derived from
 * nperm (optional): a numeric parameter to determine the bin size (number of genes) to be used during resampling. The default is NULL which assigns approximately 2000 genes to each bin<br>  
 * pvalue (optional): a boolean parameter to determine whether to return Q-values only ( FALSE ) or both P-values and Q-values (TRUE)<br>
 * plus (optional): a boolean parameter to determine whether to run both netGO and netGO+ (plus = FALSE) or netGO+ only ( plus = TRUE, default )<br>
-* verbose (optional) : a boolean parameter to show more process of netGO <br>
-
-After running the example, the user may see the following logs in R console.<br>
+* verbose (optional) : a boolean parameter whether to show more process of netGO as follows.<br>
 
 <img src='https://user-images.githubusercontent.com/6457691/71439716-0e530980-273e-11ea-8b27-3621c90416cc.png'></img>
 
@@ -208,7 +213,7 @@ genesetV is pre-calculated interaction files used to reduce the running time of 
 * genesets, network: the same as those in the *netGO* function.<br> 
 <hr>
 
-### 4. DownloadExampleData()
+### 4. DownloadExampleData
 
 This function will download example data in the user's working directory and load the data ( breast tumor, [GSE3744](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE3744) ) in user's R environment.<br>
 Note that, if objects exist in the working directory, this function will not download the data again, so we recommand removing and downloading them again if netGO package is updated. <br>
@@ -218,7 +223,7 @@ Note that, if objects exist in the working directory, this function will not dow
 * R object named *brca, genesets, genesetV, network, obj* will be loaded. 
 <hr>
 
-### 5. exportGraph()
+### 5. exportGraph
 
 exportGraph function will export network data from the netGO analsysis result as graph object that can be accessed using shinyCyJS function<br>
 
@@ -242,7 +247,7 @@ However, the default viewer of R (not web browser) will not use the layout funct
 <img src='https://user-images.githubusercontent.com/6457691/71440782-eb2a5900-2741-11ea-99ad-1e147e5e142b.gif' width = 500></img>
 <hr>
 
-### 6. exportGraphTxt()
+### 6. exportGraphTxt
 
 exportGraphTxt function will export network data from the netGO analysis result as table format.<br>
 
@@ -271,7 +276,7 @@ while 'Inner' means C and D are overlapped between *gene* and *geneset*.
 
 <hr>
 
-### 7. exportTable()
+### 7. exportTable
 
 exportTable will export the result object of netGO as table or data.table.
 
