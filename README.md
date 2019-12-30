@@ -269,10 +269,10 @@ the exported data are shown as
 |C|D|0.82|Inner|
 
 which means, there is interaction between genes A and B with the strength of 0.1 ( 0 means no interaction, 1 means strong interaction )<br>
-and 'Inter' means A and B are not overlapped between *gene* and *geneset*.<br>
+and 'Inter' means geneB belongs to the intersection of *genes* and *genesets*.
 
 there is also interaction between genes C and D with the strength of 0.82<br>
-while 'Inner' means C and D are overlapped between *gene* and *geneset*.
+while 'Inner' means geneB belongs to the differenced set *genesets* – *genes*.
 
 <hr>
 
