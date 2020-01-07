@@ -24,7 +24,7 @@ The user may want to use the following codes to install the required packages.
 
 ``` R
 install.packages('devtools') # 2.2.1
-library(devtools)
+library(devtools) # check Rcpp package is installed.
 install_github('unistbig/shinyCyJS')
 install.packages('doParallel') # 1.0.15
 install.packages('doSNOW') # 1.0.18
