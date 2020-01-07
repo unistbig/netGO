@@ -42,6 +42,9 @@ install.packages('V8') # 2.3
 Here are codes to run netGO for the breast tumor dataset (*GEO [GSE3744](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE3744).*)<br>
 
 ```r  
+library(devtools)
+install_github('unistbig/netGO') # install netGO library
+
 library(netGO) # load netGO library
 DownloadExampleData() # Download and load the breast tumor data
 obj = netGO(genes = brca[1:30], genesets, network, genesetV) 
