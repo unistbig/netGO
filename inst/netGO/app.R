@@ -181,7 +181,7 @@ afterCall <- function() {
 ui <- function() {
   fluidPage(
     useShinyjs(),
-    extendShinyjs(script = "shinyjs.js"),
+    extendShinyjs(script = "shinyjs.js", functions = c('download')),
     tags$head(tags$style(type = "text/css", "html,body{width:100%;height:100%;overflow:hidden}")),
     tags$head(tags$style(".row,.col-sm-6,.container-fluid{height:100%}")),
     tags$head(tags$style(".well,#cy{height:95%;margin:1em}")),
